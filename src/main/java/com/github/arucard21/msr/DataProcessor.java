@@ -8,84 +8,34 @@ import java.net.URL;
 import java.nio.file.Paths;
 import javax.json.Json;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParser.Event;
 
 public class DataProcessor {
 
-    public enum PROJECT {ANDROID, CHROMIUM, OPENSTACK, QT}
-
-    public String getProjectName(PROJECT name) {
-        switch (name)
-        {
-            case ANDROID:
-                return "android";
-
-            case CHROMIUM:
-                return "chromium";
-
-            case OPENSTACK:
-                return "openstack";
-
-            case QT:
-                return "qt";
-
-            default:
-                return "error";
-        }
+    public enum Project {ANDROID("android"), CHROMIUM("chromium"), OPENSTACK("openstack"), QT("qt");
+    	private final String name;
+    	Project(String name){
+    		this.name = name;
+    	}
     }
 
-    public int countChangesForProject(PROJECT project) {
+    public int countChangesForProject(Project project) {
         int totalCount = 0;
-        int i = 0;
-        String projectName = getProjectName(project);
-        String filename = project + "_changes_"+i+".json";
-        while(getResourceFile(filename) != null) {
+        File resource;
+        for(int i = 0; (resource = getResourceFile(String.format("%s_changes_%d.json", project.name, i))) != null; i++) {
             try {
-                JsonParser parser = Json.createParser(new FileReader(getResourceFile(filename)));
-                parser.next();
-                totalCount+=parser.getArrayStream().count();
+                JsonParser parser = Json.createParser(new FileReader(resource));
+                if(parser.hasNext()) {
+                	if (parser.next() == Event.START_ARRAY) {
+                		totalCount+=parser.getArrayStream().count();
+                	}
+                }                
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            i++;
-            filename = project + "_changes_"+i+".json";
         }
         return totalCount;
     }
-
-    /*
-    public int countChangesForAndroid() {
-		int totalCount = 0;
-		int i = 0;
-		while(getResourceFile("android_changes_"+i+".json") != null) {
-			try {
-				JsonParser parser = Json.createParser(new FileReader(getResourceFile("android_changes_"+i+".json")));
-				parser.next();
-				totalCount+=parser.getArrayStream().count();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			i++;
-		}
-		return totalCount;
-	}
-	
-	public int countChangesForOpenStack() {
-		int totalCount = 0;
-		int i = 0;
-		while(getResourceFile("openstack_changes_"+i+".json") != null) {
-			try {
-				JsonParser parser = Json.createParser(new FileReader(getResourceFile("openstack_changes_"+i+".json")));
-				parser.next();
-				totalCount+=parser.getArrayStream().count();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			i++;
-		}
-		return totalCount;
-		
-	}
-    */
 
 	private File getResourceFile(String filename) {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
