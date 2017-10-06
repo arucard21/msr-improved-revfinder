@@ -96,6 +96,7 @@ public class DataProcessor {
 					if (arrayDepth == 1) {
 						count++;
 					}
+					arrayDepth++;
 					break;
 				case KEY_NAME: 
 					break;
@@ -109,7 +110,8 @@ public class DataProcessor {
 					break;
 				case VALUE_NULL: 
 					break;
-				case END_OBJECT: 
+				case END_OBJECT:
+					arrayDepth--;
 					break;
 				case END_ARRAY: 
 					arrayDepth--;
