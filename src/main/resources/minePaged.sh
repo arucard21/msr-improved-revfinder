@@ -56,3 +56,5 @@ do
 	fi
 	sleep 3s
 done
+# remove non-JSON characters at beginning of JSON file
+sed -i.bak "/)]}'/d" *.json
