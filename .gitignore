@@ -14,7 +14,7 @@
 *.jar
 *.war
 *.ear
-*.zip
+#*.zip -> we use zipped data files 
 *.tar.gz
 *.rar
 
