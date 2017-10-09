@@ -1,11 +1,7 @@
 package com.github.arucard21.msr;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.function.Predicate;
 
 import javax.json.JsonValue;
