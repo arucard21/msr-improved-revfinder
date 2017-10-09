@@ -3,10 +3,17 @@ package com.github.arucard21.msr;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
+
 import javax.json.Json;
+import javax.json.JsonWriter;
+import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
@@ -22,7 +29,7 @@ public class DataProcessor {
     public int countChangesForProject(Project project) {
         int totalCount = 0;
         File resource;
-        for(int i = 0; (resource = getResourceFile(String.format("%s_changes_%d.json", project.name, i))) != null; i++) {
+        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))) != null; i++) {
             try {
                 JsonParser parser = Json.createParser(new FileReader(resource));
                 if(parser.hasNext()) {
@@ -36,10 +43,63 @@ public class DataProcessor {
         }
         return totalCount;
     }
+    
+    public int countFilteredChangesForProject(Project project) {
+	    int totalCount = 0;
+	    File resource = getResourceFile(String.format("filtered/%s_changes.json", project.name));
+        try {
+            JsonParser parser = Json.createParser(new FileReader(resource));
+            if(parser.hasNext()) {
+            	if (parser.next() == Event.START_ARRAY) {
+            		totalCount+=parser.getArrayStream().count();
+            	}
+            }                
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+	    return totalCount;
+	}
+
+	public void filter() throws IOException {
+    	for(Project project: Project.values()) {
+    		filter(project);
+    	}
+    }
+    
+    public void filter(Project project) throws IOException {
+    	File resource;
+    	HashMap<String, Object> config = new HashMap<>();
+    	config.put(JsonGenerator.PRETTY_PRINTING, true);
+    	File outputFile = new File("src/main/resources/filtered", String.format("%s_changes.json", project.name));
+    	if (outputFile.exists()) {
+    		System.out.println("Filtered data already exists, not overwriting");
+    		return;
+    	}
+    	outputFile.createNewFile();
+    	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
+    	generator.writeStartArray();
+    	
+        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))) != null; i++) {
+            try {
+                JsonParser parser = Json.createParser(new FileReader(resource));
+                if(parser.hasNext()) {
+                	if (parser.next() == Event.START_ARRAY) {
+                			parser.getArrayStream()
+                					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here	
+                					.forEach(generator::write);
+                	}
+                }                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        generator.writeEnd();
+        generator.flush();
+        generator.close();
+    }
 
 	private File getResourceFile(String filename) {
-		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		URL resource = classloader.getResource(filename);
+		URL resource = this.getClass().getClassLoader().getResource(filename);
 		if (resource == null) {
 			return null;
 		}
