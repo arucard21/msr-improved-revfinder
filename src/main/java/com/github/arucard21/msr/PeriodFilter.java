@@ -1,6 +1,11 @@
 package com.github.arucard21.msr;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.function.Predicate;
 
 import javax.json.JsonValue;
@@ -13,9 +18,9 @@ public class PeriodFilter implements Predicate<JsonValue> {
 	@Override
 	public boolean test(JsonValue t) {
 		String createdDateTime = t.asJsonObject().getString("created");
-		return createdDateTime.contains("2016");
-//		LocalDateTime created = LocalDateTime.parse(createdDateTime);
-//		return created.getYear() == 2016;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.nnnnnnnnn");
+		LocalDateTime created = LocalDateTime.parse(createdDateTime, formatter);
+		return created.getYear() == 2016;
 	}
 
 }

@@ -29,7 +29,7 @@ public class DataProcessor {
     public int countChangesForProject(Project project) {
         int totalCount = 0;
         File resource;
-        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))) != null; i++) {
+        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
             try {
                 JsonParser parser = Json.createParser(new FileReader(resource));
                 if(parser.hasNext()) {
@@ -70,22 +70,21 @@ public class DataProcessor {
     	File resource;
     	HashMap<String, Object> config = new HashMap<>();
     	config.put(JsonGenerator.PRETTY_PRINTING, true);
-    	File outputFile = new File("src/main/resources/filtered", String.format("%s_changes.json", project.name));
+    	File outputFile = getResourceFile(String.format("filtered/%s_changes.json", project.name));
     	if (outputFile.exists()) {
-    		System.out.println("Filtered data already exists, not overwriting");
     		return;
     	}
     	outputFile.createNewFile();
     	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
     	generator.writeStartArray();
     	
-        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))) != null; i++) {
+        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
             try {
                 JsonParser parser = Json.createParser(new FileReader(resource));
                 if(parser.hasNext()) {
                 	if (parser.next() == Event.START_ARRAY) {
                 			parser.getArrayStream()
-                					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here	
+                					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here
                 					.forEach(generator::write);
                 	}
                 }                
@@ -96,18 +95,10 @@ public class DataProcessor {
         generator.writeEnd();
         generator.flush();
         generator.close();
+        System.out.println("Wrote new filtered data");
     }
 
 	private File getResourceFile(String filename) {
-		URL resource = this.getClass().getClassLoader().getResource(filename);
-		if (resource == null) {
-			return null;
-		}
-		try {
-			return Paths.get(resource.toURI()).toFile();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return new File("src/main/resources/", filename);
 	}
 }

@@ -14,9 +14,9 @@ public class DataProcessorApplication {
 		
 		processor.filter();
 		
-		System.out.printf("Collected %d changes from Gerrit for Android\n", processor.countFilteredChangesForProject(DataProcessor.Project.ANDROID));
-		System.out.printf("Collected %d changes from Gerrit for Chromium\n", processor.countFilteredChangesForProject(DataProcessor.Project.CHROMIUM));
-		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countFilteredChangesForProject(DataProcessor.Project.OPENSTACK));
-		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countFilteredChangesForProject(DataProcessor.Project.QT));
+		System.out.printf("Filtered %d changes for Android\n", processor.countFilteredChangesForProject(DataProcessor.Project.ANDROID));
+		System.out.printf("Filtered %d changes for Chromium\n", processor.countFilteredChangesForProject(DataProcessor.Project.CHROMIUM));
+		System.out.printf("Filtered %d changes for OpenStack\n", processor.countFilteredChangesForProject(DataProcessor.Project.OPENSTACK));
+		System.out.printf("Filtered %d changes for Qt\n", processor.countFilteredChangesForProject(DataProcessor.Project.QT));
 	}
 }
