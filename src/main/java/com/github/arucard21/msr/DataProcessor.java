@@ -85,18 +85,18 @@ public class DataProcessor {
     	
     	if (project.equals(Project.QT)) {
     		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_abandoned.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(resource, generator);
+    			filterProjectChanges(project, resource, generator);
     		}
     		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_deferred.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(resource, generator);
+    			filterProjectChanges(project, resource, generator);
     		}
     		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_merged.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(resource, generator);
+    			filterProjectChanges(project, resource, generator);
     		}
     	}
     	else{
     		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(resource, generator);
+    			filterProjectChanges(project, resource, generator);
     		}
     	}
         generator.writeEnd();
@@ -105,13 +105,13 @@ public class DataProcessor {
         System.out.println(String.format("Wrote new filtered data for %s", project.name));
     }
 
-	private void filterProjectChanges(File resource, JsonGenerator generator) {
+	private void filterProjectChanges(Project project, File resource, JsonGenerator generator) {
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(resource));
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
 		    			parser.getArrayStream()
-		    					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here
+		    					.filter(new PeriodFilter(project)) //We can add multiple pre-processing filters here
                					.map(new ChangePreprocessor())
 		    					.forEach(generator::write);
 		    	}
