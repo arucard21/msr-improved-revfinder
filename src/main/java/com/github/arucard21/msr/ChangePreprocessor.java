@@ -12,20 +12,20 @@ public class ChangePreprocessor implements Function<JsonValue, JsonObject> {
 	@Override
 	public JsonObject apply(JsonValue t) {
 		JsonObject originalChange = t.asJsonObject();
-		  String id = originalChange.getString("id", "");
-          String change_id = originalChange.getString("change_id", "");
-          int owner_id = originalChange.getJsonObject("owner").getInt("_account_id", -1);
-          String status = originalChange.getString("status", "");
-          String created = originalChange.getString("created", "");
-          String updated = originalChange.getString("updated", "");
-          int insertions = originalChange.getInt("insertions", -1);
-          int deletions = originalChange.getInt("deletions", -1);
-          String current_revision = originalChange.getString("current_revision", "");
-          String reviewers = getReviewers(originalChange);
-          JsonArray messages = getMessages(originalChange);
-          JsonObject revisions = getRevisions(originalChange);
-          String project = originalChange.getString("project", "");
-          int number = originalChange.getInt("_number", -1);
+		String id = originalChange.getString("id", "");
+		String change_id = originalChange.getString("change_id", "");
+		int owner_id = originalChange.getJsonObject("owner").getInt("_account_id", -1);
+		String status = originalChange.getString("status", "");
+		String created = originalChange.getString("created", "");
+		String updated = originalChange.getString("updated", "");
+		int insertions = originalChange.getInt("insertions", -1);
+		int deletions = originalChange.getInt("deletions", -1);
+		String current_revision = originalChange.getString("current_revision", "");
+		String reviewers = getReviewers(originalChange);
+		JsonArray messages = getMessages(originalChange);
+		JsonObject revisions = getRevisions(originalChange);
+		String project = originalChange.getString("project", "");
+		int number = originalChange.getInt("_number", -1);
 
 		return Json.createObjectBuilder()
 				.add("id", id)
