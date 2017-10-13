@@ -107,12 +107,15 @@ public class RevFinder {
 
 	    	List<CodeReview> reviews = getReviews(project);
 	    	for (CodeReview review : reviews) {
+	    		generator.writeStartObject();
 	    		generator.write("review_id", review.getId());
 	    		generator.writeStartArray("recommended_reviewers");
 	    		generateReviewerRecommendations(project, review)
 	    				.stream()
 	    				.map(reviewer -> reviewer.asJsonObject())
 	    				.forEach(generator::write);
+	    		generator.writeEnd();
+	    		generator.writeEnd();
 	    	}
 	        generator.writeEnd();
 	        generator.flush();
