@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
+import com.github.arucard21.msr.ChangePreprocessor;
+import com.github.arucard21.msr.CodeReview;
 import com.github.arucard21.msr.Project;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,69 +26,51 @@ import java.lang.Math;
 
 
 public class RevFinder {
-	private FilePathSimilarityComparator fpComparator = new FilePathSimilarityComparator();
-	
 	private double filePathSimilarity(String filen, String filep,int ck) {
-		return fpComparator.compare(filen,filep,ck)/Math.max(filen.length(),filep.length());
+		return new FilePathSimilarityComparator().compare(filen,filep,ck)/Math.max(filen.length(),filep.length());
 	}
-	
 
-	private List<RevisionFile> getFiles(Project project, String reviews) {
-		List<RevisionFile> files = new ArrayList<>();
-		try {
-		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("filtered/%s_changes.json", project.name))));
-		    if(parser.hasNext()) {
-		    	if (parser.next() == Event.START_ARRAY) {
-		    			files = parser.getArrayStream()
-               					.map(new RevisionFileExtractor())
-               					.flatMap(Collection::stream)
-               					.collect(Collectors.toList());
-		    					
-		    	}
-		    }                
-		} catch (IOException e) {
-		    e.printStackTrace();
+	private List<RevisionFile> getFiles(Project project, CodeReview review) {
+		List<RevisionFile> revisionFiles = new ArrayList<>();
+		JsonObject revisions = review.getRevisions();
+		for (String revisionHash: revisions.keySet()) {
+			JsonObject revision = revisions.getJsonObject(revisionHash);
+			if (revision.containsKey("files")) {
+				JsonObject files = revision.getJsonObject("files");
+				for (String filePath : files.keySet()) {
+					JsonObject file = files.getJsonObject(filePath);
+					revisionFiles.add(
+							new RevisionFile(
+									filePath, 
+									file.getInt("lines_inserted"), 
+									file.getInt("lines_deleted"), 
+									file.getInt("sizes_delta"), 
+									file.getInt("size")));
+				}
+			}
 		}
-		return files;
+		return revisionFiles;
 	}
-		
-	
 
 	private File getResourceFile(String filename) {
 		return new File("src/main/resources/", filename);
 	}
 
-		
-	
-	private List<String> getCodeReviewers(String review){
-		List<String> reviewers = null;
+	private List<Reviewer> getCodeReviewers(CodeReview review){
+		List<Reviewer> reviewers = new ArrayList<>();
 		return reviewers;
 	}
-	
-	
-	
-	/**
-	 * TODO put the results in the return variable
-	 * 
-	 * @param project
-	 * @param reviewn
-	 */
-	public List<String> generateReviewerRecommendations(Project project, String reviewn){
-		List<String> reviewerRecommendations = new ArrayList<>();
-		List<String> pastReviews = getPastReviews(project);
-		Collections.sort(pastReviews);
+
+	public void generateReviewerRecommendations(Project project, CodeReview review){
+		List<CodeReview> pastReviews = getPastReviews(project, review);
+		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
 		Map<String, Double> C = new HashMap<>();
-		String reviewp;
-		Iterator<String> iter = pastReviews.iterator();
-		Iterator<String> reviewersIter;
 		double score,scoreRp;
-		String reviewer;
 		int ck = 0;
 		
-		while(iter.hasNext()) {
-			reviewp = iter.next();
-			List<RevisionFile> filesN = getFiles(project, reviewn);
-			List<RevisionFile> filesP = getFiles(project, reviewp);
+		for (CodeReview reviewPast: pastReviews) {
+			List<RevisionFile> filesN = getFiles(project, review);
+			List<RevisionFile> filesP = getFiles(project, reviewPast);
 			
 			scoreRp = 0.0;
 			for (RevisionFile fileN : filesN) {
@@ -95,56 +80,41 @@ public class RevFinder {
 			}
 			scoreRp /= ((filesN.size()) * (filesP.size()));
 			
-			reviewersIter = getCodeReviewers(reviewp).iterator();
-			while (reviewersIter.hasNext()) {
-				reviewer = reviewersIter.next();
-				score = C.get(reviewer);
-				C.put(reviewer, score + scoreRp);
+			for(Reviewer codeReviewer: getCodeReviewers(reviewPast)) {
+				score = C.getOrDefault(codeReviewer.getId(), new Double(0.0));
+				C.put(codeReviewer.getId(), score + scoreRp);
 			}
 		}
-		return reviewerRecommendations;
 	}
 
-	private List<String> getPastReviews(Project project) {
-		List<String> reviews = new ArrayList<>();
-		String date = null;
-		String message;
+	public void generateReviewerRecommendations(Project project){
+		List<CodeReview> reviews = getReviews(project);
+		for (CodeReview review : reviews) {
+			generateReviewerRecommendations(project, review);
+		}
+	}
+	
+	private List<CodeReview> getReviews(Project project) {
+		List<CodeReview> reviews = new ArrayList<>();
 		try {
-			JsonParser parser = Json.createParser(new FileReader(getResourceFile("filtered/"+project.name+"_changes.json")));
-			Event event = parser.next();
-			while (parser.hasNext()) {
-				event = parser.next();
-				switch(event) {
-					case START_ARRAY:
-					case END_ARRAY:
-					case START_OBJECT:
-					case END_OBJECT:
-					case VALUE_FALSE:
-					case VALUE_NULL:
-					case VALUE_TRUE:
-					  	  break;
-					case KEY_NAME:
-					   	  if (parser.getString().equals("date")) {
-					   		  parser.next();
-					   		  date = parser.getString();	
-					   	  }
-					   	  parser.next();
-					   	  if (parser.getString().equals("message")) {
-					   		  parser.next();
-					   		  message = parser.getString();
-					   		  if (message.contains("Code-Review")) {
-					   			  reviews.add(date);
-					   		  }
-					   	  }
-					   	break;
-					 case VALUE_STRING:
-					 case VALUE_NUMBER:
-		                  break;   	  
-					}
-				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
+		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("filtered/%s_changes.json", project.name))));
+		    if(parser.hasNext()) {
+		    	if (parser.next() == Event.START_ARRAY) {
+		    			reviews = parser.getArrayStream()
+		    					.map(codeReviewJson -> new CodeReview(codeReviewJson.asJsonObject()))
+		    					.collect(Collectors.toList());
+		    	}
+		    }                
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
 		return reviews;
+	}
+
+	private List<CodeReview> getPastReviews(Project project, CodeReview currentReview) {
+		return getReviews(project)
+				.stream()
+				.filter(review -> review.getCreated().isBefore(currentReview.getCreated()))
+				.collect(Collectors.toList());
 	}
 }

@@ -18,9 +18,6 @@ public class PeriodFilter implements Predicate<JsonValue> {
 		this.project = project;
 	}
 
-	/**
-	 * Match only changes created in 2016
-	 */
 	@Override
 	public boolean test(JsonValue t) {
 		LocalDateTime created = getDate(t.asJsonObject(), "created");

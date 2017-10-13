@@ -105,6 +105,7 @@ public class DataProcessor {
 		    			parser.getArrayStream()
 		    					.filter(new PeriodFilter(project)) //We can add multiple pre-processing filters here
                					.map(new ChangePreprocessor())
+               					.map((codeReview) -> codeReview.asJsonObject())
 		    					.forEach(generator::write);
 		    	}
 		    }                

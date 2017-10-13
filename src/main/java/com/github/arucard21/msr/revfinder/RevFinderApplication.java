@@ -1,15 +1,12 @@
 package com.github.arucard21.msr.revfinder;
 
-import java.util.List;
-
 import com.github.arucard21.msr.Project;
 
 public class RevFinderApplication {
 	public static void main(String[] args) {
 		RevFinder revFinder = new RevFinder();
-		List<String> recommendations = revFinder.generateReviewerRecommendations(Project.ANDROID, ""); // not sure what this reviewn variable is for
-		for (String recommendedReviewer : recommendations) {
-			System.out.println(recommendedReviewer);
+		for (Project project : Project.values()) {
+			revFinder.generateReviewerRecommendations(project);
 		}
 		
 		//System.out.println(LCP("src/com/android/settings/LocationSettings.java","src/com/android/settings/Utils.java"));
