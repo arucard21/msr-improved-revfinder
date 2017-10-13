@@ -24,34 +24,44 @@ public class DataProcessor {
     public int countChangesForProject(Project project) {
         int totalCount = 0;
         File resource;
-        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
-            try {
-                JsonParser parser = Json.createParser(new FileReader(resource));
-                if(parser.hasNext()) {
-                	if (parser.next() == Event.START_ARRAY) {
-                		totalCount+=parser.getArrayStream().count();
-                	}
-                }                
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
+        if (project.equals(Project.QT)) {
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_abandoned.json", project.name, i))).exists(); i++) {
+    			totalCount += countProjectChanges(resource);
+    		}
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_deferred.json", project.name, i))).exists(); i++) {
+    			totalCount += countProjectChanges(resource);
+    		}
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_merged.json", project.name, i))).exists(); i++) {
+    			totalCount += countProjectChanges(resource);
+    		}
+    	}
+    	else{
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
+    			totalCount += countProjectChanges(resource);
+    		}
+    	}
         return totalCount;
     }
+
+	private int countProjectChanges(File resource) {
+		int resourceCount = 0;
+		try {
+		    JsonParser parser = Json.createParser(new FileReader(resource));
+		    if(parser.hasNext()) {
+		    	if (parser.next() == Event.START_ARRAY) {
+		    		resourceCount+=parser.getArrayStream().count();
+		    	}
+		    }                
+		} catch (FileNotFoundException e) {
+		    e.printStackTrace();
+		}
+		return resourceCount;
+	}
     
     public int countFilteredChangesForProject(Project project) {
 	    int totalCount = 0;
 	    File resource = getResourceFile(String.format("filtered/%s_changes.json", project.name));
-        try {
-            JsonParser parser = Json.createParser(new FileReader(resource));
-            if(parser.hasNext()) {
-            	if (parser.next() == Event.START_ARRAY) {
-            		totalCount+=parser.getArrayStream().count();
-            	}
-            }                
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        totalCount = countProjectChanges(resource);
 	    return totalCount;
 	}
 
@@ -73,25 +83,43 @@ public class DataProcessor {
     	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
     	generator.writeStartArray();
     	
-        for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
-            try {
-                JsonParser parser = Json.createParser(new FileReader(resource));
-                if(parser.hasNext()) {
-                	if (parser.next() == Event.START_ARRAY) {
-                			parser.getArrayStream()
-                					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here
-                					.forEach(generator::write);
-                	}
-                }                
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    	if (project.equals(Project.QT)) {
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_abandoned.json", project.name, i))).exists(); i++) {
+    			filterProjectChanges(resource, generator);
+    		}
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_deferred.json", project.name, i))).exists(); i++) {
+    			filterProjectChanges(resource, generator);
+    		}
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_merged.json", project.name, i))).exists(); i++) {
+    			filterProjectChanges(resource, generator);
+    		}
+    	}
+    	else{
+    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
+    			filterProjectChanges(resource, generator);
+    		}
+    	}
         generator.writeEnd();
         generator.flush();
         generator.close();
-        System.out.println("Wrote new filtered data");
+        System.out.println(String.format("Wrote new filtered data for %s", project.name));
     }
+
+	private void filterProjectChanges(File resource, JsonGenerator generator) {
+		try {
+		    JsonParser parser = Json.createParser(new FileReader(resource));
+		    if(parser.hasNext()) {
+		    	if (parser.next() == Event.START_ARRAY) {
+		    			parser.getArrayStream()
+		    					.filter(new PeriodFilter()) //We can add multiple pre-processing filters here
+               					.map(new ChangePreprocessor())
+		    					.forEach(generator::write);
+		    	}
+		    }                
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
+	}
 
 	private File getResourceFile(String filename) {
 		return new File("src/main/resources/", filename);
