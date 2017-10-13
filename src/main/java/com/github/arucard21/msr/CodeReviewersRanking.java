@@ -221,7 +221,7 @@ public class CodeReviewersRanking {
 	public void codeReviewersRanking(String reviewn){
 		List<String> pastReviews = getPastReviews();
 		sortbyDate(pastReviews);
-		Map<String, Double> C;
+		Map<String, Double> C = null;
 		String reviewp;
 		Iterator<String> iter = pastReviews.iterator();
 		Iterator<String> filesnIter;
@@ -229,7 +229,7 @@ public class CodeReviewersRanking {
 		Iterator<String> reviewersIter;
 		double score,scoreRp;
 		String reviewer;
-		int ck;
+		int ck = 0;
 		
 		while(iter.hasNext()) {
 			reviewp = iter.next();
