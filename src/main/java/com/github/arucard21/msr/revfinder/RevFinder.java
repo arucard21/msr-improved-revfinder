@@ -7,20 +7,18 @@ import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
-import com.github.arucard21.msr.ChangePreprocessor;
 import com.github.arucard21.msr.CodeReview;
 import com.github.arucard21.msr.Project;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.Math;
 
@@ -61,10 +59,10 @@ public class RevFinder {
 		return reviewers;
 	}
 
-	public void generateReviewerRecommendations(Project project, CodeReview review){
+	public List<Reviewer> generateReviewerRecommendations(Project project, CodeReview review){
 		List<CodeReview> pastReviews = getPastReviews(project, review);
 		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
-		Map<String, Double> C = new HashMap<>();
+		Map<Reviewer, Double> reviewersWithRecommendationScore = new HashMap<>();
 		double score,scoreRp;
 		int ck = 0;
 		
@@ -81,19 +79,50 @@ public class RevFinder {
 			scoreRp /= ((filesN.size()) * (filesP.size()));
 			
 			for(Reviewer codeReviewer: getCodeReviewers(reviewPast)) {
-				score = C.getOrDefault(codeReviewer.getId(), new Double(0.0));
-				C.put(codeReviewer.getId(), score + scoreRp);
+				score = reviewersWithRecommendationScore.getOrDefault(codeReviewer, new Double(0.0));
+				reviewersWithRecommendationScore.put(codeReviewer, score + scoreRp);
 			}
 		}
+		return getRankedReviewerList(reviewersWithRecommendationScore);
+	}
+
+	private List<Reviewer> getRankedReviewerList(Map<Reviewer, Double> reviewersWithRecommendationScore) {
+		return reviewersWithRecommendationScore.entrySet().stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toList());
 	}
 
 	public void generateReviewerRecommendations(Project project){
-		List<CodeReview> reviews = getReviews(project);
-		for (CodeReview review : reviews) {
-			generateReviewerRecommendations(project, review);
-		}
+    	HashMap<String, Object> config = new HashMap<>();
+    	config.put(JsonGenerator.PRETTY_PRINTING, true);
+    	File outputFile = getResourceFile(String.format("revfinder/%s_recommendations.json", project.name));
+    	if (outputFile.exists()) {
+    		return;
+    	}
+    	try {
+			outputFile.createNewFile();
+	    	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
+	    	generator.writeStartArray();
+
+	    	List<CodeReview> reviews = getReviews(project);
+	    	for (CodeReview review : reviews) {
+	    		generator.write("review_id", review.getId());
+	    		generator.writeStartArray("recommended_reviewers");
+	    		generateReviewerRecommendations(project, review)
+	    				.stream()
+	    				.map(reviewer -> reviewer.asJsonObject())
+	    				.forEach(generator::write);
+	    	}
+	        generator.writeEnd();
+	        generator.flush();
+	        generator.close();
+	        System.out.println(String.format("Generated recommended reviewers for %s", project.name));
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
 	}
-	
+
 	private List<CodeReview> getReviews(Project project) {
 		List<CodeReview> reviews = new ArrayList<>();
 		try {

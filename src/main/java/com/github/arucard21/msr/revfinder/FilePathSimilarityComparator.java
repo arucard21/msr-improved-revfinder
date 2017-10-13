@@ -110,7 +110,7 @@ public class FilePathSimilarityComparator {
 
 	private int Combination(int ck, int[] R) {
 		int s = 0;
-		int[] M;
+//		int[] M;
 		for (int i = 0; i < 4;i++) {
 			//s += M[i] - rank(ck,R[i]);
 		}
