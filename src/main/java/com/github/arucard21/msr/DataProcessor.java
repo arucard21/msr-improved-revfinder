@@ -13,14 +13,6 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
 public class DataProcessor {
-
-    public enum Project {ANDROID("android"), CHROMIUM("chromium"), OPENSTACK("openstack"), QT("qt");
-    	private final String name;
-    	Project(String name){
-    		this.name = name;
-    	}
-    }
-
     public int countChangesForProject(Project project) {
         int totalCount = 0;
         File resource;

@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 
-import com.github.arucard21.msr.DataProcessor.Project;
+import com.github.arucard21.msr.Project;
 
 public class PeriodFilter implements Predicate<JsonValue> {
 
