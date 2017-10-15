@@ -2,10 +2,15 @@ package com.github.arucard21.msr;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+
+import com.github.arucard21.msr.revfinder.Reviewer;
 
 public class CodeReview{
 	private static final String JSON_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
@@ -18,7 +23,7 @@ public class CodeReview{
 	private int insertions;
 	private int deletions;
 	private String current_revision;
-	private String reviewers;
+	private JsonArray reviewers;
 	private JsonArray messages;
 	private JsonObject revisions;
 	private String project;
@@ -31,15 +36,15 @@ public class CodeReview{
 	public CodeReview(JsonObject jsonObject) {
 		String id = jsonObject.getString("id", "");
 		String change_id = jsonObject.getString("change_id", "");
-		int owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
+		int owner_id = jsonObject.getInt("owner", -1);
 		String status = jsonObject.getString("status", "");
 		String created = jsonObject.getString("created", "");
 		String updated = jsonObject.getString("updated", "");
 		int insertions = jsonObject.getInt("insertions", -1);
 		int deletions = jsonObject.getInt("deletions", -1);
 		String current_revision = jsonObject.getString("current_revision", "");
-		String reviewers = getReviewers(jsonObject);
 		JsonArray messages = getMessages(jsonObject);
+		JsonArray reviewers = getReviewers(jsonObject);
 		JsonObject revisions = getRevisions(jsonObject);
 		String project = jsonObject.getString("project", "");
 		int number = jsonObject.getInt("_number", -1);
@@ -154,7 +159,7 @@ public class CodeReview{
 		return messages == null ? Json.createArrayBuilder().build() : messages;
 	}
 
-	private String getReviewers(JsonObject originalChange) {
+	private JsonArray getReviewers(JsonObject originalChange) {
 		// TODO Auto-generated method stub
 		
 		/* original python code:
@@ -189,7 +194,30 @@ public class CodeReview{
 	                reviewers.remove(owner_id) 
 		 
 		 */
-		return "";
+		JsonArray messages = getMessages();
+		JsonObject message;
+		JsonArrayBuilder reviewer = Json.createArrayBuilder();
+		JsonArray reviewers = null;
+		
+		for (int i = 0; i< messages.size();i++) {
+			message = messages.getJsonObject(i);
+			if (message.getString("message").contains("Code-Review")) {
+				reviewer.add(Json.createObjectBuilder()
+								.add("id",message.getJsonObject("author").getString("_account_id"))
+								.add("name",message.getJsonObject("author").getString("name")));			
+			}
+		}
+		reviewers = reviewer.build();
+		
+		return reviewers;
+	}
+	
+	public List<Reviewer> getFullReviewers(){
+		List<Reviewer>  rev = new ArrayList<>();
+		for(int i = 0; i < this.reviewers.size(); i++) {
+			rev.add(new Reviewer(this.reviewers.getJsonObject(i).getString("id"),this.reviewers.getJsonObject(i).getString("name")));
+		}
+		return rev;
 	}
 	
 	private LocalDateTime toLocalDateTime(String dateString) {
@@ -275,11 +303,11 @@ public class CodeReview{
 		this.current_revision = current_revision;
 	}
 
-	public String getReviewers() {
+	public JsonArray getReviewers() {
 		return reviewers;
 	}
 
-	public void setReviewers(String reviewers) {
+	public void setReviewers(JsonArray reviewers) {
 		this.reviewers = reviewers;
 	}
 

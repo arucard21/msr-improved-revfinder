@@ -1,7 +1,11 @@
 package com.github.arucard21.msr.revfinder;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 public class FilePathSimilarityComparator {
@@ -103,18 +107,73 @@ public class FilePathSimilarityComparator {
 		return commonPath;
 	}
 
-	public int compare(String filen, String filep, int ck) {
-		int[] R = {LCP(filen,filep), LCSuff(filen,filep), LCSubstr(filen,filep), LCSubseq(filen,filep)};
-		return Combination(ck, R);
+	public double compare(String filen, String filep) {
+		String[] file1 = path2List(filen);
+		String[] file2 = path2List(filep);
+		double StringComparison = LCP(filen,filep)/Math.max(file1.length,file2.length);
+		return StringComparison;
+	}
+	
+	public double compare1(String filen, String filep) {
+		String[] file1 = path2List(filen);
+		String[] file2 = path2List(filep);
+		double StringComparison = LCSuff(filen,filep)/Math.max(file1.length,file2.length);
+		return StringComparison;
+	}
+	
+	public double compare2(String filen, String filep) {
+		String[] file1 = path2List(filen);
+		String[] file2 = path2List(filep);
+		double StringComparison = LCSubstr(filen,filep)/Math.max(file1.length,file2.length);
+		return StringComparison;
+	}
+	
+	public double compare3(String filen, String filep) {
+		String[] file1 = path2List(filen);
+		String[] file2 = path2List(filep);
+		double StringComparison = LCSubseq(filen,filep)/Math.max(file1.length,file2.length);
+		return StringComparison;
 	}
 
-	private int Combination(int ck, int[] R) {
-		int s = 0;
-//		int[] M;
-		for (int i = 0; i < 4;i++) {
-			//s += M[i] - rank(ck,R[i]);
+	public Map<Reviewer,Integer> combination(Map<Reviewer, Double> C) {
+		Map<Reviewer,Integer> s = new HashMap<>();
+		int M = 0;
+		int k = 0;
+		
+		for(Double rank:C.values()) {
+			if (rank != 0.0) {
+				M += 1;
+			}
+		}
+		
+		
+		for (Reviewer ck:C.keySet()) {
+			k = -1 * rank(ck,C) + M;
+			s.put(ck, k);
 		}
 		return s;
 	}
+	
+	private int rank(Reviewer ck, Map<Reviewer, Double> C) {
+		double ranks = 0.0;
+		int temp = 0;
+		Object[] totalRanks = null;
+		int count = 0;
+		
+		
+		ranks = C.get(ck);
+		totalRanks = C.values().toArray();
+		Arrays.sort(totalRanks);
+		for (int j=0; j<totalRanks.length;j++) {
+			if (totalRanks[j].equals(0.0)){
+				count = j;
+			}
+			if(totalRanks[j].equals(ranks)) {
+				temp = j - count;
+			}
+		}	
+		return temp;
+	}
+
 
 }

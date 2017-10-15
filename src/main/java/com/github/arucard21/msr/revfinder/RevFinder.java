@@ -24,8 +24,20 @@ import java.lang.Math;
 
 
 public class RevFinder {
-	private double filePathSimilarity(String filen, String filep,int ck) {
-		return new FilePathSimilarityComparator().compare(filen,filep,ck)/Math.max(filen.length(),filep.length());
+	private double filePathSimilarity(String filen, String filep) {
+		return new FilePathSimilarityComparator().compare(filen,filep);
+	}
+	
+	private double filePathSimilarity1(String filen, String filep) {
+		return new FilePathSimilarityComparator().compare1(filen,filep);
+	}
+	
+	private double filePathSimilarity2(String filen, String filep) {
+		return new FilePathSimilarityComparator().compare2(filen,filep);
+	}
+	
+	private double filePathSimilarity3(String filen, String filep) {
+		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
 	private List<RevisionFile> getFiles(Project project, CodeReview review) {
@@ -40,10 +52,10 @@ public class RevFinder {
 					revisionFiles.add(
 							new RevisionFile(
 									filePath, 
-									file.getInt("lines_inserted"), 
-									file.getInt("lines_deleted"), 
-									file.getInt("sizes_delta"), 
-									file.getInt("size")));
+									file.getInt("lines_inserted",0), 
+									file.getInt("lines_deleted",0), 
+									file.getInt("sizes_delta",0), 
+									file.getInt("size",0)));
 				}
 			}
 		}
@@ -56,6 +68,7 @@ public class RevFinder {
 
 	private List<Reviewer> getCodeReviewers(CodeReview review){
 		List<Reviewer> reviewers = new ArrayList<>();
+		reviewers = review.getFullReviewers();
 		return reviewers;
 	}
 
@@ -63,31 +76,52 @@ public class RevFinder {
 		List<CodeReview> pastReviews = getPastReviews(project, review);
 		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
 		Map<Reviewer, Double> reviewersWithRecommendationScore = new HashMap<>();
+		Map<Reviewer, Integer> reviewersWithRecommendationRank = new HashMap<>();
+		Map<Reviewer, Integer> combinedReviewersRecommendationRank = new HashMap<>();
 		double score,scoreRp;
-		int ck = 0;
+		int rank;
 		
-		for (CodeReview reviewPast: pastReviews) {
-			List<RevisionFile> filesN = getFiles(project, review);
-			List<RevisionFile> filesP = getFiles(project, reviewPast);
-			
-			scoreRp = 0.0;
-			for (RevisionFile fileN : filesN) {
-				for (RevisionFile fileP : filesP) {
-					scoreRp += filePathSimilarity(fileP.getFileName(),fileN.getFileName(),ck);
+		for (int i = 0;i<3;i++) {
+			for (CodeReview reviewPast: pastReviews) {
+				List<RevisionFile> filesN = getFiles(project, review);
+				List<RevisionFile> filesP = getFiles(project, reviewPast);
+				
+				scoreRp = 0.0;
+				for (RevisionFile fileN : filesN) {
+					for (RevisionFile fileP : filesP) {
+						if (i == 0) {
+							scoreRp += filePathSimilarity(fileP.getFileName(),fileN.getFileName());
+						}
+						else if (i == 1) {
+							scoreRp += filePathSimilarity1(fileP.getFileName(),fileN.getFileName());
+						}
+						else if (i == 2) {
+							scoreRp += filePathSimilarity2(fileP.getFileName(),fileN.getFileName());
+						}
+						else if (i == 3) {
+							scoreRp += filePathSimilarity3(fileP.getFileName(),fileN.getFileName());
+						}
+					}
 				}
+				scoreRp /= ((filesN.size()) * (filesP.size()));
+				
+				for(Reviewer codeReviewer: getCodeReviewers(reviewPast)) {
+					score = reviewersWithRecommendationScore.getOrDefault(codeReviewer, new Double(0.0));
+					reviewersWithRecommendationScore.put(codeReviewer, score + scoreRp);
+				}
+				
 			}
-			scoreRp /= ((filesN.size()) * (filesP.size()));
-			
-			for(Reviewer codeReviewer: getCodeReviewers(reviewPast)) {
-				score = reviewersWithRecommendationScore.getOrDefault(codeReviewer, new Double(0.0));
-				reviewersWithRecommendationScore.put(codeReviewer, score + scoreRp);
+			reviewersWithRecommendationRank = new FilePathSimilarityComparator().combination(reviewersWithRecommendationScore);
+			for (Reviewer ck:reviewersWithRecommendationRank.keySet()) {
+				rank = combinedReviewersRecommendationRank.getOrDefault(ck, new Integer(0));
+				combinedReviewersRecommendationRank.put(ck, rank + reviewersWithRecommendationRank.get(ck));
 			}
 		}
-		return getRankedReviewerList(reviewersWithRecommendationScore);
+		return getRankedReviewerList(combinedReviewersRecommendationRank);
 	}
 
-	private List<Reviewer> getRankedReviewerList(Map<Reviewer, Double> reviewersWithRecommendationScore) {
-		return reviewersWithRecommendationScore.entrySet().stream()
+	private List<Reviewer> getRankedReviewerList(Map<Reviewer, Integer> combinedReviewersRecommendationRank) {
+		return combinedReviewersRecommendationRank.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
 				.collect(Collectors.toList());
