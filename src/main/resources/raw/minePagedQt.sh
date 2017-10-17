@@ -1,6 +1,6 @@
 #!/bin/bash
 pageSize=500
-for i in {0..999}
+for i in {1..305}
 do
 	for status in abandoned deferred merged
 	do
@@ -11,7 +11,7 @@ do
 				echo "Retrieving page $i for Qt"
 				curl "https://codereview.qt-project.org/changes/?q=is:${status}&o=ALL_REVISIONS&o=ALL_FILES&o=ALL_COMMITS&o=MESSAGES&o=DETAILED_ACCOUNTS&n=${pageSize}" -o "qt_changes_${i}_${status}.json"
 			else
-				echo "Skipping page $i for Qt merged, already retrieved"
+				echo "Skipping page $i for Qt, already retrieved"
 				sleep 1s
 			fi
 		else
