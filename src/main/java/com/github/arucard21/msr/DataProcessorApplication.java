@@ -7,10 +7,10 @@ public class DataProcessorApplication {
 	public static void main(String[] args) throws IOException {
 		DataProcessor processor = new DataProcessor();
 
-		System.out.printf("Collected %d changes from Gerrit for Android\n", processor.countChangesForProject(Project.ANDROID));
-		System.out.printf("Collected %d changes from Gerrit for Chromium\n", processor.countChangesForProject(Project.CHROMIUM));
-		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countChangesForProject(Project.OPENSTACK));
-		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
+//		System.out.printf("Collected %d changes from Gerrit for Android\n", processor.countChangesForProject(Project.ANDROID));
+//		System.out.printf("Collected %d changes from Gerrit for Chromium\n", processor.countChangesForProject(Project.CHROMIUM));
+//		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countChangesForProject(Project.OPENSTACK));
+//		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
 		
 		processor.filter();
 		

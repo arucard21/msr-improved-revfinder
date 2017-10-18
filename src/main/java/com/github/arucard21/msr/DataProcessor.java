@@ -5,33 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
+import javax.json.stream.JsonParsingException;
 
 public class DataProcessor {
     public int countChangesForProject(Project project) {
         int totalCount = 0;
-        File resource;
-        if (project.equals(Project.QT)) {
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_abandoned.json", project.name, i))).exists(); i++) {
-    			totalCount += countProjectChanges(resource);
-    		}
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_deferred.json", project.name, i))).exists(); i++) {
-    			totalCount += countProjectChanges(resource);
-    		}
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_merged.json", project.name, i))).exists(); i++) {
-    			totalCount += countProjectChanges(resource);
-    		}
-    	}
-    	else{
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
-    			totalCount += countProjectChanges(resource);
-    		}
-    	}
+		for(File resource : getResourceFiles(project)) {
+			totalCount += countProjectChanges(resource);
+		}
         return totalCount;
     }
 
@@ -41,7 +33,13 @@ public class DataProcessor {
 		    JsonParser parser = Json.createParser(new FileReader(resource));
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
-		    		resourceCount+=parser.getArrayStream().count();
+		    		try {
+		    			resourceCount+=parser.getArrayStream().count();
+		    		}
+		    		catch(JsonParsingException e) {
+		    			System.err.println("JSON Parsing error occurred with file: "+resource.getName());
+		    			return -1;
+		    		}
 		    	}
 		    }                
 		} catch (FileNotFoundException e) {
@@ -52,7 +50,7 @@ public class DataProcessor {
     
     public int countFilteredChangesForProject(Project project) {
 	    int totalCount = 0;
-	    File resource = getResourceFile(String.format("filtered/%s_changes.json", project.name));
+	    File resource = new File(String.format("src/main/data/filtered/%s_changes.json", project.name));
         totalCount = countProjectChanges(resource);
 	    return totalCount;
 	}
@@ -64,10 +62,9 @@ public class DataProcessor {
     }
     
     public void filter(Project project) throws IOException {
-    	File resource;
     	HashMap<String, Object> config = new HashMap<>();
     	config.put(JsonGenerator.PRETTY_PRINTING, true);
-    	File outputFile = getResourceFile(String.format("filtered/%s_changes.json", project.name));
+    	File outputFile = new File(String.format("src/main/data/filtered/%s_changes.json", project.name));
     	if (outputFile.exists()) {
     		return;
     	}
@@ -75,21 +72,8 @@ public class DataProcessor {
     	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
     	generator.writeStartArray();
     	
-    	if (project.equals(Project.QT)) {
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_abandoned.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(project, resource, generator);
-    		}
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_deferred.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(project, resource, generator);
-    		}
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d_merged.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(project, resource, generator);
-    		}
-    	}
-    	else{
-    		for(int i = 0; (resource = getResourceFile(String.format("raw/%s_changes_%d.json", project.name, i))).exists(); i++) {
-    			filterProjectChanges(project, resource, generator);
-    		}
+    	for(File resource : getResourceFiles(project)) {
+    		filterProjectChanges(project, resource, generator);
     	}
         generator.writeEnd();
         generator.flush();
@@ -101,12 +85,18 @@ public class DataProcessor {
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(resource));
 		    if(parser.hasNext()) {
-		    	if (parser.next() == Event.START_ARRAY) {
-		    			parser.getArrayStream()
-		    					.filter(new PeriodFilter(project)) //We can add multiple pre-processing filters here
-               					.map(new ChangePreprocessor())
-               					.map((codeReview) -> codeReview.asJsonObject())
-		    					.forEach(generator::write);
+		    	try {
+			    	if (parser.next() == Event.START_ARRAY) {
+			    			parser.getArrayStream()
+			    					.filter(new PeriodFilter(project)) //We can add multiple pre-processing filters here
+	               					.map(new ChangePreprocessor())
+	               					.map((codeReview) -> codeReview.asJsonObject())
+			    					.forEach(generator::write);
+			    	}
+		    	}
+		    	catch(JsonParsingException e) {
+		    		System.err.println("JSON Parsing error occurred with file: "+resource.getName());
+		    		return;
 		    	}
 		    }                
 		} catch (IOException e) {
@@ -114,7 +104,18 @@ public class DataProcessor {
 		}
 	}
 
-	private File getResourceFile(String filename) {
-		return new File("src/main/resources/", filename);
+	private List<File> getResourceFiles(Project project){
+		Path resourcesPath = Paths.get("src/main/data/raw/");
+		String fileName = String.format("%s_changes_.*.json", project.name);
+		try {
+			return Files.list(resourcesPath)
+					.filter(path -> path.toFile().getName().matches(fileName))
+					.map(Path::toFile)
+					.collect(Collectors.toList());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+		
 	}
 }

@@ -34,35 +34,19 @@ public class CodeReview{
 	}
 	
 	public CodeReview(JsonObject jsonObject) {
-		String id = jsonObject.getString("id", "");
-		String change_id = jsonObject.getString("change_id", "");
-		int owner_id = jsonObject.getInt("owner", -1);
-		String status = jsonObject.getString("status", "");
-		String created = jsonObject.getString("created", "");
-		String updated = jsonObject.getString("updated", "");
-		int insertions = jsonObject.getInt("insertions", -1);
-		int deletions = jsonObject.getInt("deletions", -1);
-		String current_revision = jsonObject.getString("current_revision", "");
-		JsonArray messages = getMessages(jsonObject);
-		JsonArray reviewers = getReviewers(jsonObject);
-		JsonObject revisions = getRevisions(jsonObject);
-		String project = jsonObject.getString("project", "");
-		int number = jsonObject.getInt("_number", -1);
-		
-		this.id = id;
-		this.setChange_id(change_id);
-		this.setOwner_id(owner_id);
-		this.setStatus(status);
-		this.setCreated(created);
-		this.setUpdated(updated);
-		this.setInsertions(insertions);
-		this.setDeletions(deletions);
-		this.setCurrent_revision(current_revision);
-		this.setReviewers(reviewers);
-		this.setMessages(messages);
-		this.setRevisions(revisions);
-		this.setProject(project);
-		this.setNumber(number);
+		id = jsonObject.getString("id", "");
+		change_id = jsonObject.getString("change_id", "");
+		owner_id = jsonObject.getInt("owner", -1);
+		status = jsonObject.getString("status", "");
+		setCreated(jsonObject.getString("created", ""));
+		setUpdated(jsonObject.getString("updated", ""));
+		insertions = jsonObject.getInt("insertions", -1);
+		deletions = jsonObject.getInt("deletions", -1);
+		current_revision = jsonObject.getString("current_revision", "");
+		messages = getMessages(jsonObject);
+		reviewers = getReviewers(jsonObject);
+		revisions = getRevisions(jsonObject);
+		project = jsonObject.getString("project", "");
 	}
 	
 	public JsonObject asJsonObject() {
@@ -203,7 +187,7 @@ public class CodeReview{
 			message = messages.getJsonObject(i);
 			if (message.getString("message").contains("Code-Review")) {
 				reviewer.add(Json.createObjectBuilder()
-								.add("id",message.getJsonObject("author").getString("_account_id"))
+								.add("id",message.getJsonObject("author").getInt("_account_id"))
 								.add("name",message.getJsonObject("author").getString("name")));			
 			}
 		}
