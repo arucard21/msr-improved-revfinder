@@ -1,4 +1,5 @@
 #!/bin/bash
+touch startedMining
 pageSize=500
 for year in $(seq 2017 -1 2000)
 do
@@ -61,5 +62,8 @@ do
 	done
   done
 done
-# remove non-JSON characters at beginning of JSON file
-sed -i.bak "/)]}'/d" *.json
+echo "Done mining, cleaning up retrieved JSON files"
+# remove non-JSON characters at beginning of new JSON files
+find . -cnewer startedMining -iname "*.json" -exec sed -i "/)]}'/d" {} \;
+rm startedMining
+
