@@ -9,9 +9,9 @@ public class RevFinderApplication {
 			RevFinder revFinder = new RevFinder(project );
 			revFinder.generateReviewerRecommendations();
 		}
-		//int topK = 10;
-		//Project project = Project.ANDROID;
-		//System.out.println(revFinder.calculateTopKAccuracy(topK, project));
-		//System.out.println(revFinder.calculateMRR(project));
+
+		RevFinder revFinder = new RevFinder(Project.CHROMIUM);
+		System.out.println(revFinder.calculateTopKAccuracy(10));
+		System.out.println(revFinder.calculateMRR());
 	}
 }

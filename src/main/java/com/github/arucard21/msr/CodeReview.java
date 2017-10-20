@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -208,11 +209,9 @@ public class CodeReview{
 	}
 	
 	public List<Reviewer> getFullReviewers(){
-		List<Reviewer>  rev = new ArrayList<>();
-		for(int i = 0; i < this.reviewers.size(); i++) {
-			rev.add(new Reviewer(this.reviewers.getJsonObject(i).getInt("id"),this.reviewers.getJsonObject(i).getString("name")));
-		}
-		return rev;
+		return reviewers.stream()
+				.map((reviewerJSON) -> new Reviewer(reviewerJSON.asJsonObject()))
+				.collect(Collectors.toList());
 	}
 	
 	private LocalDateTime toLocalDateTime(String dateString) {

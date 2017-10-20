@@ -20,7 +20,7 @@ public class ReviewRecommendations {
 	public ReviewRecommendations(String reviewID, JsonArray recommendedReviewers) {
 		this.reviewID = reviewID;
 		this.recommendedReviewers = recommendedReviewers.stream()
-				.map((reviewer) -> new Reviewer(reviewer.asJsonObject().getInt("ID"), reviewer.asJsonObject().getString("Name")))
+				.map((reviewer) -> new Reviewer(reviewer.asJsonObject()))
 				.collect(Collectors.toList());
 	}
 	

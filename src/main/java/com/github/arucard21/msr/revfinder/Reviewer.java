@@ -12,6 +12,11 @@ public class Reviewer {
 		this.name = name;
 	}
 
+	public Reviewer(JsonObject json) {
+		this.id = json.getInt("ID");
+		this.name = json.getString("Name");
+	}
+	
 	public int getId() {
 		return id;
 	}
