@@ -28,4 +28,4 @@ hs_err_pid*
 *.iml
 *.json
 src/main/data/raw/*/*.txt
-*.7z
+src/main/data/raw/*.7z
