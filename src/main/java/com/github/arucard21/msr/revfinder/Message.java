@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 public class Message {
 	private final String id;
@@ -46,14 +47,18 @@ public class Message {
 	}
 	
 	public JsonObject asJsonObject() {
-		return Json.createObjectBuilder()
+		JsonObjectBuilder builder = Json.createObjectBuilder()
 				.add("id", id)
-				.add("author", author.asJsonObject())
-				.add("real_author", realAuthor.asJsonObject())
 				.add("date", fromLocalDateTime(date))
-				.add("message", message)
 				.add("_revision_number", revisionNumber)
-				.build();
+				.add("message", message);
+		if (author != null) {			
+			builder.add("author", author.asJsonObject());
+		}
+		if (realAuthor != null) {
+			builder.add("real_author", realAuthor.asJsonObject());
+		}
+		return builder.build();
 	}
 
 	public String getId() {
@@ -87,6 +92,9 @@ public class Message {
 	}
 
 	private String fromLocalDateTime(LocalDateTime date) {
+		if (date == null) {
+			return "";
+		}
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(JSON_DATE_TIME_PATTERN);
 		return date.format(formatter);
 	}

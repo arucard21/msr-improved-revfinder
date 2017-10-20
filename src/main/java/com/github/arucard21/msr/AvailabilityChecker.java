@@ -37,7 +37,7 @@ public class AvailabilityChecker {
     public void check(Project project) throws IOException, ParseException {
 
         JSONParser parser = new JSONParser();
-        String filename = project.name + "_changes_small.json";
+        String filename = project.name + "_changes.json";
         JSONArray reviews = (JSONArray) parser.parse(new FileReader(getResourceFile(filename)));
 
         for (Object rev : reviews)
@@ -131,5 +131,6 @@ public class AvailabilityChecker {
         }
         reviewers.add(id);
         reviewersAtDay.put(date, reviewers);
+        
     }
 }

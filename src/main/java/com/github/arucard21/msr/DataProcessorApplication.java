@@ -13,8 +13,8 @@ public class DataProcessorApplication {
 		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
 		/*
 		 * Latest Output:
-			Collected 0 changes from Gerrit for Android
-			Collected 0 changes from Gerrit for Chromium
+			Collected 9051 changes from Gerrit for Android
+			Collected 9463 changes from Gerrit for Chromium
 			Collected 493548 changes from Gerrit for OpenStack
 			Collected 180092 changes from Gerrit for Qt
 		 */
@@ -27,8 +27,8 @@ public class DataProcessorApplication {
 		System.out.printf("Filtered %d changes for Qt\n", processor.countFilteredChangesForProject(Project.QT));
 		/*
 		 * Latest Output:
-			Filtered 0 changes for Android
-			Filtered 26 changes for Chromium
+			Filtered 420 changes for Android
+			Filtered 20 changes for Chromium
 			Filtered 5966 changes for OpenStack
 			Filtered 24789 changes for Qt
 		 */
