@@ -4,13 +4,10 @@ import com.github.arucard21.msr.Project;
 
 public class RevFinderApplication {
 	public static void main(String[] args) {
-		RevFinder revFinder = new RevFinder();
 		for (Project project : Project.values()) {
-			if (project.equals(Project.QT)) {
-			}
-			else {
-				revFinder.generateReviewerRecommendations(project);
-			}
+			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
+			RevFinder revFinder = new RevFinder(project );
+			revFinder.generateReviewerRecommendations();
 		}
 		//int topK = 10;
 		//Project project = Project.ANDROID;

@@ -26,6 +26,14 @@ import java.time.LocalDateTime;
 
 
 public class RevFinder {
+	private final Project project;
+	private final List<CodeReview> reviews;
+	
+	public RevFinder(Project project) {
+		this.project = project;
+		this.reviews = loadReviews();
+	}
+
 	private double filePathSimilarity(String filen, String filep) {
 		return new FilePathSimilarityComparator().compare(filen,filep);
 	}
@@ -42,7 +50,7 @@ public class RevFinder {
 		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
-	private List<RevisionFile> getFiles(Project project, CodeReview review) {
+	private List<RevisionFile> getFiles(CodeReview review) {
 		List<RevisionFile> revisionFiles = new ArrayList<>();
 		JsonObject revisions = review.getRevisions();
 		for (String revisionHash: revisions.keySet()) {
@@ -111,8 +119,8 @@ public class RevFinder {
 		return reviewers;
 	}
 
-	public List<Reviewer> generateReviewerRecommendations(Project project, CodeReview review){
-		List<CodeReview> pastReviews = getPastReviews(project, review);
+	public List<Reviewer> generateReviewerRecommendations(CodeReview review){
+		List<CodeReview> pastReviews = getPastReviews(review);
 		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
 		Map<Reviewer, Double> reviewersWithRecommendationScore = new HashMap<>();
 		Map<Reviewer, Integer> reviewersWithRecommendationRank = new HashMap<>();
@@ -122,8 +130,8 @@ public class RevFinder {
 		
 		for (int i = 0;i<3;i++) {
 			for (CodeReview reviewPast: pastReviews) {
-				List<RevisionFile> filesN = getFiles(project, review);
-				List<RevisionFile> filesP = getFiles(project, reviewPast);
+				List<RevisionFile> filesN = getFiles(review);
+				List<RevisionFile> filesP = getFiles(reviewPast);
 				
 				scoreRp = 0.0;
 				for (RevisionFile fileN : filesN) {
@@ -172,7 +180,7 @@ public class RevFinder {
 		}
 	}
 
-	public void generateReviewerRecommendations(Project project){
+	public void generateReviewerRecommendations(){
     	HashMap<String, Object> config = new HashMap<>();
     	config.put(JsonGenerator.PRETTY_PRINTING, true);
     	File outputFile = getResourceFile(String.format("revfinder/%s_recommendations.json", project.name));
@@ -184,12 +192,11 @@ public class RevFinder {
 	    	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
 	    	generator.writeStartArray();
 
-	    	List<CodeReview> reviews = getReviews(project);
 	    	for (CodeReview review : reviews) {
 	    		generator.writeStartObject();
 	    		generator.write("review_id", review.getId());
 	    		generator.writeStartArray("recommended_reviewers");
-	    		generateReviewerRecommendations(project, review)
+	    		generateReviewerRecommendations(review)
 	    				.stream()
 	    				.map(reviewer -> reviewer.asJsonObject())
 	    				.forEach(generator::write);
@@ -205,7 +212,7 @@ public class RevFinder {
     	}
 	}
 
-	private List<CodeReview> getReviews(Project project) {
+	private List<CodeReview> loadReviews() {
 		List<CodeReview> reviews = new ArrayList<>();
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("filtered/%s_changes.json", project.name))));
@@ -222,25 +229,24 @@ public class RevFinder {
 		return reviews;
 	}
 
-	private List<CodeReview> getPastReviews(Project project, CodeReview currentReview) {
-		return getReviews(project)
-				.stream()
+	private List<CodeReview> getPastReviews(CodeReview currentReview) {
+		return reviews.stream()
 				.filter(review -> review.getCreated().isBefore(currentReview.getCreated()))
 				.collect(Collectors.toList());
 	}
 	
-	public double calculateTopKAccuracy(int topK, Project project) {
+	public double calculateTopKAccuracy(int topK) {
 		double topKAccuracy = 0.0;
-		List<CodeReview> R = getReviews(project);
 		
-		for (CodeReview r: R) {
-			topKAccuracy += isCorrect(r, topK, project);
+		
+		for (CodeReview r: reviews) {
+			topKAccuracy += isCorrect(r, topK);
 		}
-		topKAccuracy /= R.size() * 100;
+		topKAccuracy /= reviews.size() * 100;
 		return topKAccuracy;
 	}
 
-	private double isCorrect(CodeReview r, int topK, Project project) {
+	private double isCorrect(CodeReview r, int topK) {
 		List<Reviewer> topKReviewers = new ArrayList<>();
 		List<Reviewer> actualReviewers = r.getFullReviewers();
 		
@@ -252,18 +258,17 @@ public class RevFinder {
 		return 0;
 	}
 	
-	public double calculateMRR(Project project) {
+	public double calculateMRR() {
 		double mRR = 0.0;
-		List<CodeReview> R = getReviews(project);
 		int temp;
 		
-		for (CodeReview r: R) {
-			temp = rank(candidates(r,project), r);
+		for (CodeReview r: reviews) {
+			temp = rank(candidates(r), r);
 			if (temp != 0) {
 				mRR += 1/temp;
 			}
 		}
-		mRR /= R.size();
+		mRR /= reviews.size();
 		return mRR;
 	}
 
@@ -284,7 +289,7 @@ public class RevFinder {
 		return ranks[ranks.length-1];
 	}
 
-	private List<Reviewer> candidates(CodeReview r, Project project) {
+	private List<Reviewer> candidates(CodeReview r) {
 		List<Reviewer> reviewers = new ArrayList<>();
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("revfinder/%s_recommendations.json", project.name))));
