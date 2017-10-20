@@ -12,9 +12,7 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
 
-import com.github.arucard21.msr.ChangePreprocessor;
 import com.github.arucard21.msr.CodeReview;
-import com.github.arucard21.msr.PeriodFilter;
 import com.github.arucard21.msr.Project;
 import java.util.ArrayList;
 import java.util.Arrays;
