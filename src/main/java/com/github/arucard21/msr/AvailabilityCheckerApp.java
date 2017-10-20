@@ -24,6 +24,6 @@ public class AvailabilityCheckerApp {
         }
 
         // testing
-        //AvChecker.checkBinaryAvailability(AvChecker.getDateFromString("2011-11-09 00:00:00"), 679);
+        System.out.println("679 available ? : " + AvChecker.checkBinaryAvailability(AvChecker.getDateFromString("2011-11-09 00:00:00"), 679));
     }
 }
