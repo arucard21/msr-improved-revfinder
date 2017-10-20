@@ -9,9 +9,12 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
 
+import com.github.arucard21.msr.ChangePreprocessor;
 import com.github.arucard21.msr.CodeReview;
+import com.github.arucard21.msr.PeriodFilter;
 import com.github.arucard21.msr.Project;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -295,28 +298,32 @@ public class RevFinder {
 	}
 
 	private List<Reviewer> candidates(CodeReview r) {
-		List<Reviewer> reviewers = new ArrayList<>();
 		try {
-		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("revfinder/%s_recommendations.json", project.name))));
-		    while(parser.hasNext()) {
-		    	if (parser.next() == Event.KEY_NAME) {
-		    		if (parser.getString().equals("review_id")) {
-		    			if (parser.next() == Event.VALUE_STRING) {
-		    				if (parser.getString().equals(r.getId())) {
-		    					parser.next();
-		    					if (parser.next() == Event.START_ARRAY) {
-		    						reviewers = parser.getArrayStream()
-		    			    					.map(reviewerJson -> new Reviewer(reviewerJson.asJsonObject().getInt("ID"),reviewerJson.asJsonObject().getString("Name")))
-		    			    					.collect(Collectors.toList());
-		    					}
-		    				}
-		    			}
-		    		}
+		    File resource = getResourceFile(String.format("revfinder/%s_recommendations.json", project.name));
+		    
+			JsonParser parser = Json.createParser(new FileReader(resource));
+		    if(parser.hasNext()) {
+		    	try {
+			    	if (parser.next() == Event.START_ARRAY) {
+			    			List<ReviewRecommendations> recommendations = parser.getArrayStream()
+			    					.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject().getString("review_id"), recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
+			    					.filter(recommendation -> recommendation.getReviewID().equals(r.getId()))
+			    					.collect(Collectors.toList());
+			    			if (recommendations.size() == 1) {
+			    				return recommendations.get(0).getRecommendedReviewers();
+			    			}
+			    			else {
+			    				System.err.println(String.format("Review with ID %d gave 0 or multiple results", r.getId()));
+			    			}
+			    	}
+		    	}
+		    	catch(JsonParsingException e) {
+		    		System.err.println("JSON Parsing error occurred with file: "+resource.getName());
 		    	}
 		    }			
 		} catch (IOException e) {
 		    e.printStackTrace();
 		}
-		return reviewers;
+		return Collections.emptyList();
 	}
 }
