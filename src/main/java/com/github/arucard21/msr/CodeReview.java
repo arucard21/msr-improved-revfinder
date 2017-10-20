@@ -10,8 +10,10 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
-import com.github.arucard21.msr.revfinder.Reviewer;
+import com.github.arucard21.msr.revfinder.GerritUser;
+import com.github.arucard21.msr.revfinder.Message;
 
 public class CodeReview{
 	private static final String JSON_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
@@ -24,8 +26,8 @@ public class CodeReview{
 	private int insertions;
 	private int deletions;
 	private String current_revision;
-	private JsonArray reviewers;
-	private JsonArray messages;
+	private List<GerritUser> reviewers = new ArrayList<>();
+	private List<Message> messages = new ArrayList<>();
 	private JsonObject revisions;
 	private String project;
 	private int number;
@@ -49,14 +51,14 @@ public class CodeReview{
 		insertions = jsonObject.getInt("insertions", -1);
 		deletions = jsonObject.getInt("deletions", -1);
 		current_revision = jsonObject.getString("current_revision", "");
-		messages = getMessages(jsonObject);
-		reviewers = getReviewers(jsonObject);
-		revisions = getRevisions(jsonObject);
+		loadMessages(jsonObject);
+		loadReviewers(jsonObject);
+		revisions = loadRevisions(jsonObject);
 		project = jsonObject.getString("project", "");
 	}
 	
 	public JsonObject asJsonObject() {
-		return Json.createObjectBuilder()
+		JsonObjectBuilder builder = Json.createObjectBuilder()
 				.add("id", id)
 				.add("change_id", change_id)
 				.add("owner", owner_id)
@@ -66,16 +68,22 @@ public class CodeReview{
 				.add("insertions", insertions)
 				.add("deletions", deletions)
 				.add("current_revision", current_revision)
-				.add("reviewers", reviewers)
-				.add("messages", messages)
+				
 				.add("revisions", revisions)
 				.add("project", project)
-				.add("number", number)
-				.build();
+				.add("number", number);
+				
+		for(GerritUser reviewer: reviewers) {
+			builder.add("reviewers", reviewer.asJsonObject());
+		}
+		for(Message msg : messages) {
+			builder.add("messages", msg.asJsonObject());
+		}
+		return builder.build();
 	
 	}
 
-	private JsonObject getRevisions(JsonObject originalChange) {
+	private JsonObject loadRevisions(JsonObject originalChange) {
 		// TODO Auto-generated method stub
 		
 		/* original python code:
@@ -114,104 +122,25 @@ public class CodeReview{
 		JsonObject revisions = originalChange.getJsonObject("revisions");
 		return revisions == null ? Json.createObjectBuilder().build() : revisions;
 	}
-
-	private JsonArray getMessages(JsonObject originalChange) {
-		// TODO Auto-generated method stub
-		
-		/* original python code:
-		 messages = record['messages']
-	            reviewers = []
-	            clean_messages = []
-	            for msg in messages:
-	                msg_id = msg['id']
 	
-	                if 'author' not in msg:
-	                    dropped += 1
-	                    continue
-	
-	                if '_account_id' not in msg['author']:
-	                    dropped += 1
-	                    continue
-	                msg_author_id = msg['author']['_account_id']
-	                reviewers.append(msg_author_id)
-	                msg_date = msg['date'][0:19]
-	                msg_type = ("review", "self")[owner_id == msg_author_id]
-	
-	                clean_msg = {
-	                    'id': msg_id,
-	                    'author': msg_author_id,
-	                    'type': msg_type,
-	                    'date': msg_date,
-	                }
-	                clean_messages.append(clean_msg)
-		 */
-		JsonArray messages = originalChange.getJsonArray("messages");
-		return messages == null ? Json.createArrayBuilder().build() : messages;
+	private void loadMessages(JsonObject originalChange) {
+		messages = originalChange.getJsonArray("messages").stream()
+				.map(messageJSON -> new Message(messageJSON.asJsonObject()))
+				.collect(Collectors.toList());
 	}
 
-	private JsonArray getReviewers(JsonObject originalChange) {
-		// TODO Auto-generated method stub
-		
-		/* original python code:
-		 reviewers = []
-	            clean_messages = []
-	            for msg in messages:
-	                msg_id = msg['id']
-	
-	                if 'author' not in msg:
-	                    dropped += 1
-	                    continue
-	
-	                if '_account_id' not in msg['author']:
-	                    dropped += 1
-	                    continue
-	                msg_author_id = msg['author']['_account_id']
-	                reviewers.append(msg_author_id)
-	                msg_date = msg['date'][0:19]
-	                msg_type = ("review", "self")[owner_id == msg_author_id]
-	
-	                clean_msg = {
-	                    'id': msg_id,
-	                    'author': msg_author_id,
-	                    'type': msg_type,
-	                    'date': msg_date,
-	                }
-	                clean_messages.append(clean_msg)
-	
-	            reviewers = list(set(reviewers))
-	
-	            if owner_id in reviewers:
-	                reviewers.remove(owner_id) 
-		 
-		 */
-		JsonArray messages = getMessages();
-		JsonObject message;
-		JsonArrayBuilder reviewer = Json.createArrayBuilder();
-		JsonArray reviewers = null;
-		String name = "";
-		
-		for (int i = 0; i< messages.size();i++) {
-			message = messages.getJsonObject(i);
-			try {
-				name = message.getJsonObject("author").getString("name");
-			} catch(NullPointerException e) {
-				name = "";
-			}
-			if (message.getString("message").contains("Code-Review")) {
-				reviewer.add(Json.createObjectBuilder()
-								.add("id",message.getJsonObject("author").getInt("_account_id"))
-								.add("name",name));			
+	private void loadReviewers(JsonObject originalChange) {
+		for(Message msg: messages) {
+			GerritUser author = msg.getAuthor();
+			if(author != null) {
+				int accountID = author.getId();
+				if(accountID != -1) {
+					if(accountID != this.owner_id) {
+						reviewers.add(author);
+					}
+				}
 			}
 		}
-		reviewers = reviewer.build();
-		
-		return reviewers;
-	}
-	
-	public List<Reviewer> getFullReviewers(){
-		return reviewers.stream()
-				.map((reviewerJSON) -> new Reviewer(reviewerJSON.asJsonObject()))
-				.collect(Collectors.toList());
 	}
 	
 	private LocalDateTime toLocalDateTime(String dateString) {
@@ -297,19 +226,19 @@ public class CodeReview{
 		this.current_revision = current_revision;
 	}
 
-	public JsonArray getReviewers() {
+	public List<GerritUser> getReviewers() {
 		return reviewers;
 	}
 
-	public void setReviewers(JsonArray reviewers) {
+	public void setReviewers(List<GerritUser> reviewers) {
 		this.reviewers = reviewers;
 	}
 
-	public JsonArray getMessages() {
+	public List<Message> getMessages() {
 		return messages;
 	}
 
-	public void setMessages(JsonArray messages) {
+	public void setMessages(List<Message> messages) {
 		this.messages = messages;
 	}
 

@@ -10,9 +10,9 @@ import javax.json.JsonObjectBuilder;
 
 public class ReviewRecommendations {
 	private final String reviewID;
-	private final List<Reviewer> recommendedReviewers;
+	private final List<GerritUser> recommendedReviewers;
 	
-	public ReviewRecommendations(String reviewID, List<Reviewer> recommendedReviewers) {
+	public ReviewRecommendations(String reviewID, List<GerritUser> recommendedReviewers) {
 		this.reviewID = reviewID;
 		this.recommendedReviewers = recommendedReviewers;
 	}
@@ -20,7 +20,7 @@ public class ReviewRecommendations {
 	public ReviewRecommendations(String reviewID, JsonArray recommendedReviewers) {
 		this.reviewID = reviewID;
 		this.recommendedReviewers = recommendedReviewers.stream()
-				.map((reviewer) -> new Reviewer(reviewer.asJsonObject()))
+				.map((reviewer) -> new GerritUser(reviewer.asJsonObject()))
 				.collect(Collectors.toList());
 	}
 	
@@ -28,14 +28,14 @@ public class ReviewRecommendations {
 		return reviewID;
 	}
 
-	public List<Reviewer> getRecommendedReviewers() {
+	public List<GerritUser> getRecommendedReviewers() {
 		return recommendedReviewers;
 	}
 
 	public JsonObject asJsonObject(){
 		JsonObjectBuilder builder = Json.createObjectBuilder()
 				.add("review_id", getReviewID());
-		for (Reviewer recommended: getRecommendedReviewers()) {
+		for (GerritUser recommended: getRecommendedReviewers()) {
 			builder.add("recommended_reviewers", recommended.asJsonObject());
 		}
 		return builder.build();

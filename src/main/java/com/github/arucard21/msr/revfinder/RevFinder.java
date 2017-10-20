@@ -79,7 +79,7 @@ public class RevFinder {
 		return new File("src/main/data/", filename);
 	}
 
-	private double getAvailability(Reviewer reviewer, LocalDateTime date) {
+	private double getAvailability(GerritUser reviewer, LocalDateTime date) {
 		double[] availability = new double[7];
 		int reviews = getNumberReviews(date, reviewer);
 		double available = 0.0;
@@ -95,7 +95,7 @@ public class RevFinder {
 		return available;
 	}
 
-	private double getWorkload(Reviewer reviewer) {
+	private double getWorkload(GerritUser reviewer) {
 		double workload;
 		
 		workload = getNumberFiles(reviewer)/getAverageNumberFiles();
@@ -107,27 +107,27 @@ public class RevFinder {
 		return 0;
 	}
 
-	private int getNumberFiles(Reviewer reviewer) {
+	private int getNumberFiles(GerritUser reviewer) {
 		
 		return 0;
 	}
 
-	private int getNumberReviews(LocalDateTime date, Reviewer reviewer) {
+	private int getNumberReviews(LocalDateTime date, GerritUser reviewer) {
 		return 0;
 	}
 	
-	private List<Reviewer> getCodeReviewers(CodeReview review){
-		List<Reviewer> reviewers = new ArrayList<>();
-		reviewers = review.getFullReviewers();
+	private List<GerritUser> getCodeReviewers(CodeReview review){
+		List<GerritUser> reviewers = new ArrayList<>();
+		reviewers = review.getReviewers();
 		return reviewers;
 	}
 
-	public List<Reviewer> generateReviewerRecommendations(CodeReview review){
+	public List<GerritUser> generateReviewerRecommendations(CodeReview review){
 		List<CodeReview> pastReviews = getPastReviews(review);
 		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
-		Map<Reviewer, Double> reviewersWithRecommendationScore = new HashMap<>();
-		Map<Reviewer, Integer> reviewersWithRecommendationRank = new HashMap<>();
-		Map<Reviewer, Integer> combinedReviewersRecommendationRank = new HashMap<>();
+		Map<GerritUser, Double> reviewersWithRecommendationScore = new HashMap<>();
+		Map<GerritUser, Integer> reviewersWithRecommendationRank = new HashMap<>();
+		Map<GerritUser, Integer> combinedReviewersRecommendationRank = new HashMap<>();
 		double score,scoreRp;
 		int rank;
 		
@@ -155,14 +155,14 @@ public class RevFinder {
 				}
 				scoreRp /= ((filesN.size()) * (filesP.size()));
 				
-				for(Reviewer codeReviewer: getCodeReviewers(reviewPast)) {
+				for(GerritUser codeReviewer: getCodeReviewers(reviewPast)) {
 					score = reviewersWithRecommendationScore.getOrDefault(codeReviewer, new Double(0.0));
 					reviewersWithRecommendationScore.put(codeReviewer, score + scoreRp);
 				}
 				
 			}
 			reviewersWithRecommendationRank = new FilePathSimilarityComparator().combination(reviewersWithRecommendationScore);
-			for (Reviewer ck:reviewersWithRecommendationRank.keySet()) {
+			for (GerritUser ck:reviewersWithRecommendationRank.keySet()) {
 				rank = combinedReviewersRecommendationRank.getOrDefault(ck, new Integer(0));
 				combinedReviewersRecommendationRank.put(ck, rank + reviewersWithRecommendationRank.get(ck));
 			}
@@ -170,8 +170,8 @@ public class RevFinder {
 		return getRankedReviewerList(combinedReviewersRecommendationRank);
 	}
 
-	private List<Reviewer> getRankedReviewerList(Map<Reviewer, Integer> combinedReviewersRecommendationRank) {
-		List<Reviewer> tempList = combinedReviewersRecommendationRank.entrySet().stream()
+	private List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
+		List<GerritUser> tempList = combinedReviewersRecommendationRank.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
 				.collect(Collectors.toList());
@@ -250,15 +250,15 @@ public class RevFinder {
 	}
 
 	private double isCorrect(CodeReview r, int topK) {
-		List<Reviewer> topKReviewers = candidates(r);
-		List<Reviewer> actualReviewers = r.getFullReviewers();
+		List<GerritUser> topKReviewers = candidates(r);
+		List<GerritUser> actualReviewers = r.getReviewers();
 		
 		if (topKReviewers.size() > topK) {
 			topKReviewers = topKReviewers.subList(0, topK-1);
 		}
 		
 		
-		for(Reviewer topKReviewer: topKReviewers) {
+		for(GerritUser topKReviewer: topKReviewers) {
 			if (actualReviewers.contains(topKReviewer)) {
 				return 1.0;
 			}
@@ -280,12 +280,12 @@ public class RevFinder {
 		return mRR;
 	}
 
-	private int rank(List<Reviewer> candidates, CodeReview r) {
+	private int rank(List<GerritUser> candidates, CodeReview r) {
 		int[] ranks = new int[10];
 		int j = 0;
-		List<Reviewer> actualReviewers = r.getFullReviewers();
+		List<GerritUser> actualReviewers = r.getReviewers();
 		
-		for (Reviewer actualReviewer: actualReviewers) {
+		for (GerritUser actualReviewer: actualReviewers) {
 			for (int i = 0; i < candidates.size(); i++) {
 				if (candidates.get(i).equals(actualReviewer)) {
 					ranks[j] = i;
@@ -297,7 +297,7 @@ public class RevFinder {
 		return ranks[ranks.length-1];
 	}
 
-	private List<Reviewer> candidates(CodeReview r) {
+	private List<GerritUser> candidates(CodeReview r) {
 		try {
 		    File resource = getResourceFile(String.format("revfinder/%s_recommendations.json", project.name));
 		    

@@ -135,8 +135,8 @@ public class FilePathSimilarityComparator {
 		return StringComparison;
 	}
 
-	public Map<Reviewer,Integer> combination(Map<Reviewer, Double> C) {
-		Map<Reviewer,Integer> s = new HashMap<>();
+	public Map<GerritUser,Integer> combination(Map<GerritUser, Double> C) {
+		Map<GerritUser,Integer> s = new HashMap<>();
 		int M = 0;
 		int k = 0;
 		
@@ -147,14 +147,14 @@ public class FilePathSimilarityComparator {
 		}
 		
 		
-		for (Reviewer ck:C.keySet()) {
+		for (GerritUser ck:C.keySet()) {
 			k = -1 * rank(ck,C) + M;
 			s.put(ck, k);
 		}
 		return s;
 	}
 	
-	private int rank(Reviewer ck, Map<Reviewer, Double> C) {
+	private int rank(GerritUser ck, Map<GerritUser, Double> C) {
 		double ranks = 0.0;
 		int temp = 0;
 		Object[] totalRanks = null;
