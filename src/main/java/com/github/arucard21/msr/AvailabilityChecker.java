@@ -79,7 +79,6 @@ public class AvailabilityChecker {
     public boolean checkBinaryAvailability(Date today, int reviewer) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(today);
-        System.out.println(getDateStringFromDate(today));
 
         for(int i = 1; i <= 7; i++)
         {
@@ -96,6 +95,31 @@ public class AvailabilityChecker {
         }
 
         return false;
+    }
+
+    public float checkLogAvailability(Date today, int reviewer) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(today);
+        float avScore = 0;
+        double sum = 4.3810663;
+
+        for(int i = 1; i <= 7; i++) {
+            cal.add(Calendar.DATE, -1);
+            Date date = cal.getTime();
+            String dateString = getDateStringFromDate(date);
+
+            if (!reviewersAtDay.containsKey(dateString))
+                continue;
+
+            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersAtDay.get(getDateStringFromDate(date)));
+            if (reviewersAtDay.get(dateString).contains(reviewer)) {
+                double score = Math.log(7 - i + 1) / Math.log(7);
+                avScore += score;
+                //System.out.println("  + " + i + " : " + score);
+            }
+            sum += Math.log(7 - i + 1) / Math.log(7);
+        }
+        return (float) (avScore / sum);
     }
 
     private File getResourceFile(String filename) {
