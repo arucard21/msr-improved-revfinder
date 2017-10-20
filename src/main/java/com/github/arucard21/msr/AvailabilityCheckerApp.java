@@ -2,11 +2,10 @@ package com.github.arucard21.msr;
 
 import org.json.simple.parser.ParseException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class AvailabilityCheckerApp {
 
@@ -15,16 +14,13 @@ public class AvailabilityCheckerApp {
 
         AvChecker.check(Project.OPENSTACK);
 
-        Map<String, ArrayList> reviewersAtDay = AvChecker.getReviewersAtDay();
+        Map<String, List<Integer>> reviewersAtDay = AvChecker.getReviewersAtDay();
         System.out.println(reviewersAtDay.size());
         System.out.println("newest: " + AvChecker.getNewest());
         System.out.println("oldest: " + AvChecker.getOldest());
 
-        Iterator it = AvChecker.getReviewersAtDay().entrySet().iterator();
-        while (it.hasNext())
-        {
-            Map.Entry pair = (Map.Entry)it.next();
-            System.out.println(pair.getKey() + " = " + pair.getValue());
+        for(Entry<String, List<Integer>> date : AvChecker.getReviewersAtDay().entrySet()) {
+            System.out.println(date.getKey() + " = " + date.getValue());
         }
 
         // testing

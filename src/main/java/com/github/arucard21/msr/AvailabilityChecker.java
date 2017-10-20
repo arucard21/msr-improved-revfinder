@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class AvailabilityChecker {
-    public Map<String, ArrayList> getReviewersAtDay() {
+    public Map<String, List<Integer>> getReviewersAtDay() {
         return reviewersAtDay;
     }
 
@@ -23,7 +23,7 @@ public class AvailabilityChecker {
         return newest;
     }
 
-    private Map<String, ArrayList> reviewersAtDay;
+    private Map<String, List<Integer>> reviewersAtDay;
     private Date oldest;
     private Date newest;
     private String dateFormat = "yyyy-MM-dd HH:mm:ss";
@@ -120,7 +120,7 @@ public class AvailabilityChecker {
     }
 
     private void addReview(String date, int id) {
-        ArrayList reviewers = null;
+        List<Integer> reviewers = new ArrayList<>();
         if(reviewersAtDay.containsKey(date))
         {
             reviewers = reviewersAtDay.get(date);
@@ -129,7 +129,6 @@ public class AvailabilityChecker {
             reviewersAtDay.put(date, reviewers);
             return;
         }
-        reviewers = new ArrayList();
         reviewers.add(id);
         reviewersAtDay.put(date, reviewers);
     }
