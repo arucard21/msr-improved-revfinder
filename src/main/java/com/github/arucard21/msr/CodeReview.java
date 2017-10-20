@@ -58,7 +58,15 @@ public class CodeReview{
 	}
 	
 	public JsonObject asJsonObject() {
-		JsonObjectBuilder builder = Json.createObjectBuilder()
+		JsonArrayBuilder reviewersBuilder = Json.createArrayBuilder();
+		JsonArrayBuilder messagesBuilder = Json.createArrayBuilder();
+		for(GerritUser reviewer: reviewers) {
+			reviewersBuilder.add(reviewer.asJsonObject());
+		}
+		for(Message msg : messages) {
+			messagesBuilder.add(msg.asJsonObject());
+		}
+		return Json.createObjectBuilder()
 				.add("id", id)
 				.add("change_id", change_id)
 				.add("owner", owner_id)
@@ -68,19 +76,12 @@ public class CodeReview{
 				.add("insertions", insertions)
 				.add("deletions", deletions)
 				.add("current_revision", current_revision)
-				
+				.add("messages", messagesBuilder)
+				.add("reviewers", reviewersBuilder)
 				.add("revisions", revisions)
 				.add("project", project)
-				.add("number", number);
-				
-		for(GerritUser reviewer: reviewers) {
-			builder.add("reviewers", reviewer.asJsonObject());
-		}
-		for(Message msg : messages) {
-			builder.add("messages", msg.asJsonObject());
-		}
-		return builder.build();
-	
+				.add("number", number)
+				.build();
 	}
 
 	private JsonObject loadRevisions(JsonObject originalChange) {

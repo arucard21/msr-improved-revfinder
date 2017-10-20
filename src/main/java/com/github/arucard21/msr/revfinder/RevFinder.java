@@ -72,7 +72,7 @@ public class RevFinder {
 	}
 
 	private File getResourceFile(String filename) {
-		return new File("src/main/resources/", filename);
+		return new File("src/main/data/", filename);
 	}
 
 	private double getAvailability(GerritUser reviewer, LocalDateTime date) {
