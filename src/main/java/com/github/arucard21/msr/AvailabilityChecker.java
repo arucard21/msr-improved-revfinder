@@ -80,7 +80,6 @@ public class AvailabilityChecker {
         Calendar cal = Calendar.getInstance();
         cal.setTime(today);
         System.out.println(getDateStringFromDate(today));
-        System.out.println(reviewer + " ? " + today.toString() + " : " + reviewersAtDay.get(getDateStringFromDate(today)));
 
         for(int i = 1; i <= 7; i++)
         {
@@ -89,13 +88,14 @@ public class AvailabilityChecker {
             String dateString = getDateStringFromDate(date);
 
             if(! reviewersAtDay.containsKey(dateString))
-                return false;
+                continue;
 
-            if(! reviewersAtDay.get(dateString).contains(reviewer))
-                return false;
+            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersAtDay.get(getDateStringFromDate(date)));
+            if(reviewersAtDay.get(dateString).contains(reviewer))
+                return true;
         }
 
-        return true;
+        return false;
     }
 
     private File getResourceFile(String filename) {
