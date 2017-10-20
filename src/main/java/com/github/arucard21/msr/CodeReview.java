@@ -182,13 +182,19 @@ public class CodeReview{
 		JsonObject message;
 		JsonArrayBuilder reviewer = Json.createArrayBuilder();
 		JsonArray reviewers = null;
+		String name = "";
 		
 		for (int i = 0; i< messages.size();i++) {
 			message = messages.getJsonObject(i);
+			try {
+				name = message.getJsonObject("author").getString("name");
+			} catch(NullPointerException e) {
+				name = "";
+			}
 			if (message.getString("message").contains("Code-Review")) {
 				reviewer.add(Json.createObjectBuilder()
 								.add("id",message.getJsonObject("author").getInt("_account_id"))
-								.add("name",message.getJsonObject("author").getString("name")));			
+								.add("name",name));			
 			}
 		}
 		reviewers = reviewer.build();

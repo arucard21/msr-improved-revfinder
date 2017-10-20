@@ -166,10 +166,10 @@ public class FilePathSimilarityComparator {
 		Arrays.sort(totalRanks);
 		for (int j=0; j<totalRanks.length;j++) {
 			if (totalRanks[j].equals(0.0)){
-				count = j;
+				count = j+1;
 			}
 			if(totalRanks[j].equals(ranks)) {
-				temp = j - count;
+				temp = totalRanks.length - j;
 			}
 		}	
 		return temp;
