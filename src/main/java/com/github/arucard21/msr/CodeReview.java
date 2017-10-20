@@ -33,10 +33,15 @@ public class CodeReview{
 		this.id = id;
 	}
 	
-	public CodeReview(JsonObject jsonObject) {
+	public CodeReview(JsonObject jsonObject, boolean fullChangeJSON) {
 		id = jsonObject.getString("id", "");
 		change_id = jsonObject.getString("change_id", "");
-		owner_id = jsonObject.getInt("owner");
+		if (fullChangeJSON) {
+			owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
+		}
+		else {
+			owner_id = jsonObject.getInt("owner", -1);
+		}
 		status = jsonObject.getString("status", "");
 		setCreated(jsonObject.getString("created", ""));
 		setUpdated(jsonObject.getString("updated", ""));

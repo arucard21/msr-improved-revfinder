@@ -222,7 +222,7 @@ public class RevFinder {
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
 		    			reviews = parser.getArrayStream()
-		    					.map(codeReviewJson -> new CodeReview(codeReviewJson.asJsonObject()))
+		    					.map(codeReviewJson -> new CodeReview(codeReviewJson.asJsonObject(), false))
 		    					.collect(Collectors.toList());
 		    	}
 		    }                
