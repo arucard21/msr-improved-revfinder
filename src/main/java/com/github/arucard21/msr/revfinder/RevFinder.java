@@ -247,15 +247,20 @@ public class RevFinder {
 	}
 
 	private double isCorrect(CodeReview r, int topK) {
-		List<Reviewer> topKReviewers = new ArrayList<>();
+		List<Reviewer> topKReviewers = candidates(r);
 		List<Reviewer> actualReviewers = r.getFullReviewers();
+		
+		if (topKReviewers.size() > topK) {
+			topKReviewers = topKReviewers.subList(0, topK-1);
+		}
+		
 		
 		for(Reviewer topKReviewer: topKReviewers) {
 			if (actualReviewers.contains(topKReviewer)) {
-				return 1;
+				return 1.0;
 			}
 		}
-		return 0;
+		return 0.0;
 	}
 	
 	public double calculateMRR() {
@@ -298,6 +303,7 @@ public class RevFinder {
 		    		if (parser.getString().equals("review_id")) {
 		    			if (parser.next() == Event.VALUE_STRING) {
 		    				if (parser.getString().equals(r.getId())) {
+		    					parser.next();
 		    					if (parser.next() == Event.START_ARRAY) {
 		    						reviewers = parser.getArrayStream()
 		    			    					.map(reviewerJson -> new Reviewer(reviewerJson.asJsonObject().getInt("ID"),reviewerJson.asJsonObject().getString("Name")))
