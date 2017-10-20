@@ -11,6 +11,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
 
 import com.github.arucard21.msr.CodeReview;
 import com.github.arucard21.msr.Project;
@@ -173,6 +174,7 @@ public class RevFinder {
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
 				.collect(Collectors.toList());
+		Collections.reverse(tempList);
 		if (tempList.size() > 9) {
 			return tempList.subList(0, 9);
 		}
@@ -255,7 +257,6 @@ public class RevFinder {
 			topKReviewers = topKReviewers.subList(0, topK-1);
 		}
 		
-		
 		for(GerritUser topKReviewer: topKReviewers) {
 			if (actualReviewers.contains(topKReviewer)) {
 				return 1.0;
@@ -279,20 +280,30 @@ public class RevFinder {
 	}
 
 	private int rank(List<GerritUser> candidates, CodeReview r) {
-		int[] ranks = new int[10];
-		int j = 0;
 		List<GerritUser> actualReviewers = r.getReviewers();
+		int arraySize = actualReviewers.size() > candidates.size() ? actualReviewers.size() : candidates.size();
+		List<Integer> ranks = new ArrayList<>(arraySize+10);
 		
+		int j = 0;
 		for (GerritUser actualReviewer: actualReviewers) {
-			for (int i = 0; i < candidates.size(); i++) {
-				if (candidates.get(i).equals(actualReviewer)) {
-					ranks[j] = i;
-					j++;
+			int i = 0;
+			for (GerritUser candidate: candidates) {
+				if (candidate.equals(actualReviewer)) {
+					if(j < ranks.size()) {
+						List<Integer> ranksNew = new ArrayList<>(j);
+						for (Integer rank : ranks) {
+							ranksNew.add(rank);
+						}
+						ranks = ranksNew;
+					}
+					ranks.set(j, Integer.valueOf(i));
 				}
+				i++;
 			}
+			j++;
 		}
-		Arrays.sort(ranks);
-		return ranks[ranks.length-1];
+		Collections.sort(ranks);
+		return ranks.get(ranks.size()-1);
 	}
 
 	private List<GerritUser> candidates(CodeReview r) {
