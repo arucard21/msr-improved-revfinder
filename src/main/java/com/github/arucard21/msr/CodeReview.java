@@ -36,7 +36,7 @@ public class CodeReview{
 	public CodeReview(JsonObject jsonObject) {
 		id = jsonObject.getString("id", "");
 		change_id = jsonObject.getString("change_id", "");
-		owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
+		owner_id = jsonObject.getInt("owner");
 		status = jsonObject.getString("status", "");
 		setCreated(jsonObject.getString("created", ""));
 		setUpdated(jsonObject.getString("updated", ""));
