@@ -313,7 +313,12 @@ public class RevFinder {
 			    				return recommendations.get(0).getRecommendedReviewers();
 			    			}
 			    			else {
-			    				System.err.println(String.format("Review with ID %d gave 0 or multiple results", r.getId()));
+			    				if (recommendations.size() == 0) {
+			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
+			    				}
+			    				else {
+			    					System.err.println(String.format("Review with ID %s gave multiple results", r.getId()));
+			    				}
 			    			}
 			    	}
 		    	}
