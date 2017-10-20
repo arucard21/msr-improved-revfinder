@@ -75,7 +75,7 @@ public class RevFinder {
 	}
 
 	private File getResourceFile(String filename) {
-		return new File("src/main/data/", filename);
+		return new File("src/main/resources/", filename);
 	}
 
 	private double getAvailability(GerritUser reviewer, LocalDateTime date) {
@@ -245,7 +245,7 @@ public class RevFinder {
 		for (CodeReview r: reviews) {
 			topKAccuracy += isCorrect(r, topK);
 		}
-		topKAccuracy /= reviews.size() * 100;
+		topKAccuracy  =  topKAccuracy* 100 / reviews.size();
 		return topKAccuracy;
 	}
 

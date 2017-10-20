@@ -133,10 +133,12 @@ public class CodeReview{
 		for(Message msg: messages) {
 			GerritUser author = msg.getAuthor();
 			if(author != null) {
-				int accountID = author.getId();
-				if(accountID != -1) {
-					if(accountID != this.owner_id) {
-						reviewers.add(author);
+				if (!reviewers.contains(author)) {
+					int accountID = author.getId();
+					if(accountID != -1) {
+						if(accountID != this.owner_id) {
+							reviewers.add(author);
+						}
 					}
 				}
 			}
