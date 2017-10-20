@@ -43,9 +43,13 @@ do
 				echo $changeNumber >> $retrieved
 				cat $response | sed "/)]}'/d" >> $changes
 			else
+				if [ $(curl -s -o /dev/null -w "%{http_code}" "https://android-review.googlesource.com/changes/${changeNumber}?o=ALL_REVISIONS&o=ALL_FILES&o=ALL_COMMITS&o=MESSAGES&o=DETAILED_ACCOUNTS") -eq 429 ]
+				then
+					exit -1
+				fi
 				echo $changeNumber >> $noReview
 			fi
-			sleep 0.2s
+			sleep 1s
 		fi
 	fi
 	echo "Amount processed: ${count}"
