@@ -14,7 +14,7 @@
 *.jar
 *.war
 *.ear
-#*.zip -> we use zipped data files 
+*.zip
 *.tar.gz
 *.rar
 
@@ -26,4 +26,6 @@ hs_err_pid*
 /out/
 .idea/
 *.iml
-/src/main/data/*/*.json
+*.json
+src/main/data/raw/*/*.txt
+*.7z
