@@ -280,30 +280,24 @@ public class RevFinder {
 	}
 
 	private int rank(List<GerritUser> candidates, CodeReview r) {
+		int lowestRank = -1;
 		List<GerritUser> actualReviewers = r.getReviewers();
-		int arraySize = actualReviewers.size() > candidates.size() ? actualReviewers.size() : candidates.size();
-		List<Integer> ranks = new ArrayList<>(arraySize+10);
 		
-		int j = 0;
 		for (GerritUser actualReviewer: actualReviewers) {
-			int i = 0;
-			for (GerritUser candidate: candidates) {
-				if (candidate.equals(actualReviewer)) {
-					if(j < ranks.size()) {
-						List<Integer> ranksNew = new ArrayList<>(j);
-						for (Integer rank : ranks) {
-							ranksNew.add(rank);
-						}
-						ranks = ranksNew;
+			for (int i = 0; i < candidates.size(); i++) {
+				if(actualReviewer.equals(candidates.get(i))) {
+					if(lowestRank == -1) {
+						lowestRank = i;
 					}
-					ranks.set(j, Integer.valueOf(i));
+					else {
+						if(i < lowestRank) {
+							lowestRank = i;
+						}
+					}					
 				}
-				i++;
 			}
-			j++;
 		}
-		Collections.sort(ranks);
-		return ranks.get(ranks.size()-1);
+		return lowestRank;
 	}
 
 	private List<GerritUser> candidates(CodeReview r) {
