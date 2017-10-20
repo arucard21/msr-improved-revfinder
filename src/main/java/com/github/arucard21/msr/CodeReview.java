@@ -199,7 +199,7 @@ public class CodeReview{
 	public List<Reviewer> getFullReviewers(){
 		List<Reviewer>  rev = new ArrayList<>();
 		for(int i = 0; i < this.reviewers.size(); i++) {
-			rev.add(new Reviewer(this.reviewers.getJsonObject(i).getString("id"),this.reviewers.getJsonObject(i).getString("name")));
+			rev.add(new Reviewer(this.reviewers.getJsonObject(i).getInt("id"),this.reviewers.getJsonObject(i).getString("name")));
 		}
 		return rev;
 	}

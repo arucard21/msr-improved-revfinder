@@ -4,15 +4,15 @@ import javax.json.Json;
 import javax.json.JsonObject;
 
 public class Reviewer {
-	private final String id;
+	private final int id;
 	private final String name;
 	
-	public Reviewer(String id, String name) {
+	public Reviewer(int id, String name) {
 		this.id = id;
 		this.name = name;
 	}
 
-	public String getId() {
+	public int getId() {
 		return id;
 	}
 

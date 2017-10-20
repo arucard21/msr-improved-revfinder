@@ -63,7 +63,7 @@ public class RevFinder {
 	}
 
 	private File getResourceFile(String filename) {
-		return new File("src/main/resources/", filename);
+		return new File("src/main/data/", filename);
 	}
 
 	private List<Reviewer> getCodeReviewers(CodeReview review){
