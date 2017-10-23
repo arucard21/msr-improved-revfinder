@@ -91,24 +91,31 @@ public class RevFinder {
 		return available;
 	}
 
-	private double getWorkload(GerritUser reviewer) {
+	private double getWorkload(CodeReview review) {
 		double workload;
 		
-		workload = getNumberFiles(reviewer)/getAverageNumberFiles();
+		workload =(double)getFiles(review).size()/getAverageNumberFiles();
 		return workload;
 	}
 	
-	private int getAverageNumberFiles() {
-		
-		return 0;
+	public void printWorkload() {
+		for (CodeReview review: reviews) {
+			System.out.println(getWorkload(review));
+		}
 	}
-
-	private int getNumberFiles(GerritUser reviewer) {
+	
+	public int getAverageNumberFiles() {
+		int files = 0;
 		
-		return 0;
+		for (CodeReview review: reviews) {
+			files += getFiles(review).size();
+		}
+		files /= reviews.size();
+		return files;
 	}
 
 	private int getNumberReviews(LocalDateTime date, GerritUser reviewer) {
+		
 		return 0;
 	}
 	
@@ -242,7 +249,7 @@ public class RevFinder {
 		for (CodeReview r: reviews) {
 			topKAccuracy += isCorrect(r, topK);
 		}
-		topKAccuracy  =  topKAccuracy* 100 / reviews.size();
+		topKAccuracy  =  topKAccuracy * 100 / reviews.size();
 		return topKAccuracy;
 	}
 
@@ -269,8 +276,9 @@ public class RevFinder {
 		for (CodeReview r: reviews) {
 			temp = rank(candidates(r), r);
 			if (temp != 0) {
-				mRR += 1/temp;
+				mRR +=  (double) 1/temp;
 			}
+	
 		}
 		mRR /= reviews.size();
 		return mRR;
@@ -293,6 +301,9 @@ public class RevFinder {
 					}					
 				}
 			}
+		}
+		if (lowestRank == -1) {
+			return 0;
 		}
 		return lowestRank;
 	}
