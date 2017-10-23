@@ -12,7 +12,7 @@ response="chromium_response.json"
 # while read -r gitURL
 # do 
 # 	git ls-remote $gitURL | grep refs/changes/ >> $refs 
-# 	sleep 500ms
+# 	sleep 0.5s
 # done < $projectsFile
 # 
 # sed "s/^.*refs\/changes\/[0-9]\+\/\([0-9]\+\)\/.*$/\1/" $refs | uniq > $changeNumbers

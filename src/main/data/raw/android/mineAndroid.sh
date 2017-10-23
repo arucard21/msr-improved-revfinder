@@ -30,9 +30,9 @@ fi
 count=0
 while read -r changeNumber
 do 
-	if [ ! $(grep "$changeNumber" $noReview) ]
+	if [ ! $(grep "^$changeNumber$" $noReview) ]
 	then 
-		if [ ! $(grep "$changeNumber" $retrieved) ]
+		if [ ! $(grep "^$changeNumber$" $retrieved) ]
 		then
 			if curl --output $response --silent --fail "https://android-review.googlesource.com/changes/${changeNumber}?o=ALL_REVISIONS&o=ALL_FILES&o=ALL_COMMITS&o=MESSAGES&o=DETAILED_ACCOUNTS"
 			then
