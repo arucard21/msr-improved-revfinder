@@ -43,8 +43,10 @@ do
 				echo $changeNumber >> $retrieved
 				cat $response | sed "/)]}'/d" >> $changes
 			else
+				sleep 1s
 				if [ $(curl -s -o /dev/null -w "%{http_code}" "https://chromium-review.googlesource.com/changes/${changeNumber}?o=ALL_REVISIONS&o=ALL_FILES&o=ALL_COMMITS&o=MESSAGES&o=DETAILED_ACCOUNTS") -eq 429 ]
 				then
+					date
 					exit -1
 				fi
 				echo $changeNumber >> $noReview
@@ -60,3 +62,4 @@ done < $changeNumbers
 sed -i "1i \[" $changes
 echo "]" >> $changes
 rm $response
+echo "Finished retrieving data"
