@@ -1,0 +1,17 @@
+Android
+topK: 55.95238095238095
+MRR: 0.1827749433106577
+NumberofAverageFiles: 3
+Chromium
+topK: 60.0
+MRR: 0.1375
+NumberofAverageFiles: 8
+Openstack
+topK: 92.30640295005028
+MRR: 0.695533818622992
+NumberofAverageFiles: 14
+Qt
+topK: 75.33583444269635
+MRR: 0.3440523254361886
+NumberofAverageFiles: 11
+

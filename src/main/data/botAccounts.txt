@@ -1,0 +1,4 @@
+Android:Treehugger Robot,1062513
+Chromium:Chromebot,1000004
+Openstack:SmokeStack CI,2166,LaunchpadSync,9,Jenkins,3,Trivial Rebase,5494,Elastic Recheck,8871,Ryu CI,9681,Midocura CI,9925,Arista CI,4395,Intel SR-IOV CI,15752,Cisko N1kv CI,14213,Metaplugin CI,10121,Cisco Tail-f CI,14212,Cisco CI,14208,NEC CI,10116,Arista CI,9845,Nuage CI,10184,Inter Experimental CI,14571,Cisco FwaaS CI,15444,Freescale CI,10387,Cisco CSR1kv CI,14215,Microsoft Hyper-V CI,5170,Big Switch CI,9787,Cisco UCSM CI,15443,Brocade Openstack CI,15296,A10 Networks CI,12040,One Convergence CI,10153,HP Networking CI,14323
+Qt:Qt Sanity Bot,1000049,Qt Continuous Intergration System,1000060,Qt CI Bot,1003699,Qt Submodule Update Bot,1000191
