@@ -1,11 +1,12 @@
-package com.github.arucard21.msr;
+package com.github.arucard21.msr.checker;
 
+import com.github.arucard21.msr.Project;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class AvailabilityCheckerApp {
 
@@ -14,12 +15,12 @@ public class AvailabilityCheckerApp {
 
         AvChecker.check(Project.OPENSTACK);
 
-        Map<String, List<Integer>> reviewersAtDay = AvChecker.getReviewersAtDay();
+        Map<String, Set> reviewersAtDay = AvChecker.getReviewersByDay();
         System.out.println(reviewersAtDay.size());
         System.out.println("newest: " + AvChecker.getNewest());
         System.out.println("oldest: " + AvChecker.getOldest());
 
-        for(Entry<String, List<Integer>> date : AvChecker.getReviewersAtDay().entrySet()) {
+        for(Entry<String, Set> date : AvChecker.getReviewersByDay().entrySet()) {
             System.out.println(date.getKey() + " = " + date.getValue());
         }
 

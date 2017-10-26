@@ -1,5 +1,6 @@
-package com.github.arucard21.msr;
+package com.github.arucard21.msr.checker;
 
+import com.github.arucard21.msr.Project;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -11,8 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class AvailabilityChecker {
-    public Map<String, List<Integer>> getReviewersAtDay() {
-        return reviewersAtDay;
+    public Map<String, Set> getReviewersByDay() {
+        return reviewersByDay;
     }
 
     public Date getOldest() {
@@ -23,13 +24,13 @@ public class AvailabilityChecker {
         return newest;
     }
 
-    private Map<String, List<Integer>> reviewersAtDay;
+    private Map<String, Set> reviewersByDay;
     private Date oldest;
     private Date newest;
     private String dateFormat = "yyyy-MM-dd HH:mm:ss";
 
     public AvailabilityChecker() {
-        reviewersAtDay = new HashMap<>();
+        reviewersByDay = new HashMap<>();
         oldest = getDateFromString("2018-01-01 00:00:00");
         newest = getDateFromString("1990-01-01 00:00:00");
     }
@@ -37,7 +38,7 @@ public class AvailabilityChecker {
     public void check(Project project) throws IOException, ParseException {
 
         JSONParser parser = new JSONParser();
-        String filename = project.name + "_changes.json";
+        String filename = project.name + "_changes_small.json";
         JSONArray reviews = (JSONArray) parser.parse(new FileReader(getResourceFile(filename)));
 
         for (Object rev : reviews)
@@ -86,11 +87,11 @@ public class AvailabilityChecker {
             Date date = cal.getTime();
             String dateString = getDateStringFromDate(date);
 
-            if(! reviewersAtDay.containsKey(dateString))
+            if(! reviewersByDay.containsKey(dateString))
                 continue;
 
-            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersAtDay.get(getDateStringFromDate(date)));
-            if(reviewersAtDay.get(dateString).contains(reviewer))
+            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            if(reviewersByDay.get(dateString).contains(reviewer))
                 return true;
         }
 
@@ -108,11 +109,11 @@ public class AvailabilityChecker {
             Date date = cal.getTime();
             String dateString = getDateStringFromDate(date);
 
-            if (!reviewersAtDay.containsKey(dateString))
+            if (!reviewersByDay.containsKey(dateString))
                 continue;
 
-            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersAtDay.get(getDateStringFromDate(date)));
-            if (reviewersAtDay.get(dateString).contains(reviewer)) {
+            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            if (reviewersByDay.get(dateString).contains(reviewer)) {
                 double score = Math.log(7 - i + 1) / Math.log(7);
                 avScore += score;
                 //System.out.println("  + " + i + " : " + score);
@@ -144,17 +145,9 @@ public class AvailabilityChecker {
     }
 
     private void addReview(String date, int id) {
-        List<Integer> reviewers = new ArrayList<>();
-        if(reviewersAtDay.containsKey(date))
-        {
-            reviewers = reviewersAtDay.get(date);
-            if(!reviewers.contains(id))
-                reviewers.add(id);
-            reviewersAtDay.put(date, reviewers);
-            return;
-        }
+        Set reviewers = reviewersByDay.get(date);
+        if(reviewers == null) reviewers = new HashSet();
         reviewers.add(id);
-        reviewersAtDay.put(date, reviewers);
-        
+        reviewersByDay.put(date, reviewers);
     }
 }
