@@ -1,12 +1,6 @@
 package com.github.arucard21.msr.checker;
 
 import com.github.arucard21.msr.Project;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class WorkloadCheckerApp {
 

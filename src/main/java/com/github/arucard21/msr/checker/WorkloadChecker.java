@@ -1,7 +1,6 @@
 package com.github.arucard21.msr.checker;
 
 import com.github.arucard21.msr.Project;
-import com.sun.xml.internal.bind.v2.TODO;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -175,12 +174,12 @@ public class WorkloadChecker {
         System.out.println("-------------------------------------------\n");
     }
 
+    // reviews that go over several years
     private boolean isExcluded(String changeID, Project project) {
         ArrayList excluded = new ArrayList();
 
         if(project.equals(Project.OPENSTACK))
         {
-            // reviews go over several years
             excluded.add("I1aafec1b2a3943e0f6c86f0228ab29f181a7ffce");
             excluded.add("I00ebc716dccbe9fb97e2b8a3cb5d5e496bc7719b");
             excluded.add("I310adfe00a3ad6c3631a71c9d2b1befb12a31f5a");
