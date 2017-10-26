@@ -1,6 +1,7 @@
 package com.github.arucard21.msr.checker;
 
 import com.github.arucard21.msr.Project;
+import com.sun.xml.internal.bind.v2.TODO;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -163,11 +164,15 @@ public class WorkloadChecker {
         //printWorkloadByReviewerId();
         printWorkloadByDate();
         printAvgWorkloadByDate();
-        printAuthorFQ(authorFq);
+        //printAuthorFQ(authorFq);
+
+        System.out.println("\n-------------------------------------------");
         printPresumedBots();
 
         // TODO PREPROCESSING
+        System.out.println("\n-------------------------------------------");
         System.out.println("*] empty revisions: " + countEmptyRevisions);
+        System.out.println("-------------------------------------------\n");
     }
 
     private boolean isExcluded(String changeID, Project project) {
@@ -179,6 +184,32 @@ public class WorkloadChecker {
             excluded.add("I1aafec1b2a3943e0f6c86f0228ab29f181a7ffce");
             excluded.add("I00ebc716dccbe9fb97e2b8a3cb5d5e496bc7719b");
             excluded.add("I310adfe00a3ad6c3631a71c9d2b1befb12a31f5a");
+        }
+
+        if(project.equals(Project.QT))
+        {
+            excluded.add("I0d1f95f3d1194b33113175689cfe2832ede0ffa4");
+            excluded.add("I39e4156bd9ba743afa7e106e934c90227fbf2b8b");
+            excluded.add("I1267979af7601129e5483f8785d4982a1f2f8182");
+            excluded.add("I353debd4338f2a3ce2fa1cfa1bff9dd2e36f05ab");
+            excluded.add("Ibe246d47ab7667692386b0f9333150c195948282");
+            excluded.add("I5799d0e7a835537b46a520e2dfe5d78b891f0c89");
+            excluded.add("Ifc6e22f135a1f6bff7c0fa8bef3ea7e1042ae819");
+            excluded.add("I851e0b1c3f80a7b33a38cb1ab2665dc0f3c73adc");
+            excluded.add("Ic1ef67f500f9ff92d36164d515f4e004ef2a10bc");
+            excluded.add("I8c187908c4483f90f1b99fa6182ce1532385173d");
+            excluded.add("I85c00dd88547f8dea9b1e1ef2da31d2f2e28a172");
+            excluded.add("I2d28270563eebb495b82fac8ec23346c98e859f9");
+            excluded.add("I85c00dd88547f8dea9b1e1ef2da31d2f2e28a172");
+            excluded.add("If69149678e7fba6d812d31dcc17877427f9a6122");
+            excluded.add("Idd9819c3f4c48f98ef92831d5e8e5ac0fa42283c");
+            excluded.add("I85c00dd88547f8dea9b1e1ef2da31d2f2e28a172");
+            excluded.add("I70887773952ecaa61da21077ffec321fd5fabbb1");
+            excluded.add("I3316498e5bb10c416138ca14c3a7f8b143c8e544");
+            excluded.add("Ia784d4cbc4f37c925aa49e53d04faf06a7169a73");
+            excluded.add("Ib5a07730836a42533d5488882e877074ccceea4c");
+            excluded.add("I4c683c08876cc6fa934971399af7e48b160168fc");
+            excluded.add("I8510f8d67c22230653ec0f1c252c01bc95f3c386");
         }
 
         return excluded.contains(changeID);
@@ -288,6 +319,10 @@ public class WorkloadChecker {
             int currentRevNr = ((Long) revision.get("_number")).intValue();
             if(currentRevNr == revision_number)
             {
+                //TODO PREPROCESSING
+                if(! revision.containsKey("files"))
+                    return 0;
+
                 return ((JSONObject) revision.get("files")).size();
             }
         }
@@ -303,6 +338,8 @@ public class WorkloadChecker {
         //isBot |= ! author.containsKey("email");
         isBot |= ((String) author.get("name")).contains("Jenkins");
         isBot |= ((String) author.get("name")).contains("CI");
+        isBot |= ((String) author.get("name")).contains("Continuous Integration");
+        isBot |= ((String) author.get("name")).contains("Qt");
 
         if(isBot) presumedBots.add(author);
         return isBot;

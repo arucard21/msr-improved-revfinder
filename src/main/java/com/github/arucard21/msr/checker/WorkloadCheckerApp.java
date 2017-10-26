@@ -13,7 +13,7 @@ public class WorkloadCheckerApp {
     public static void main(String[] args) throws Exception {
         WorkloadChecker WlChecker = new WorkloadChecker();
 
-        WlChecker.check(Project.OPENSTACK);
+        WlChecker.check(Project.QT);
 
         String day = "2011-11-04";
         int revID = 5638;
