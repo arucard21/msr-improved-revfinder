@@ -210,6 +210,10 @@ public class WorkloadChecker {
             excluded.add("Ib5a07730836a42533d5488882e877074ccceea4c");
             excluded.add("I4c683c08876cc6fa934971399af7e48b160168fc");
             excluded.add("I8510f8d67c22230653ec0f1c252c01bc95f3c386");
+            excluded.add("Ifa62ea7983905ecb11863257e18ea04565474fc9");
+            excluded.add("If43866d74b49273816fb80059507da70498402a6");
+            excluded.add("I70efb0db869b9e7de862edd0cd4754764e2e2099");
+            excluded.add("I73872956f462624a77d5258883b8c45c4afa6b36");
         }
 
         return excluded.contains(changeID);
