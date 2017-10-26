@@ -160,7 +160,7 @@ public class WorkloadChecker {
             }
         }
 
-        printWorkloadByReviewerId();
+        //printWorkloadByReviewerId();
         printWorkloadByDate();
         printAvgWorkloadByDate();
         printAuthorFQ(authorFq);
