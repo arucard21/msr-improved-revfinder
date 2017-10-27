@@ -1,5 +1,5 @@
 #!/bin/bash
-touch startedMining
+touch startedMiningOpenStack
 pageSize=500
 for year in $(seq 2017 -1 2000)
 do
@@ -36,6 +36,6 @@ do
 done
 echo "Done mining, cleaning up retrieved JSON files"
 # remove non-JSON characters at beginning of new JSON files
-find . -cnewer startedMining -iname "*.json" -exec sed -i "/)]}'/d" {} \;
-rm startedMining
+find . -cnewer startedMiningOpenStack -iname "openstack_changes_*.json" -exec sed -i "/)]}'/d" {} \;
+rm startedMiningOpenStack
 

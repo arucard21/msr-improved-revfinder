@@ -1,5 +1,5 @@
 #!/bin/bash
-touch startedMining
+touch startedMiningQt
 pageSize=500
 for i in {0..305}
 do
@@ -38,5 +38,5 @@ do
 done
 echo "Done mining, cleaning up retrieved JSON files"
 # remove non-JSON characters at beginning of new JSON files
-find . -cnewer startedMining -iname "*.json" -exec sed -i "/)]}'/d" {} \;
-rm startedMining
+find . -cnewer startedMiningQt -iname "qt_changes_*.json" -exec sed -i "/)]}'/d" {} \;
+rm startedMiningQt
