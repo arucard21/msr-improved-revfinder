@@ -11,7 +11,7 @@ import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
-import com.github.arucard21.msr.CodeReview;
+import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.Project;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 
 public class RevFinder {
 	private final Project project;
-	private final List<CodeReview> reviews;
+	private final List<ReviewableChange> reviews;
 	
 	public RevFinder(Project project) {
 		this.project = project;
@@ -49,7 +49,7 @@ public class RevFinder {
 		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
-	private List<RevisionFile> getFiles(CodeReview review) {
+	private List<RevisionFile> getFiles(ReviewableChange review) {
 		List<RevisionFile> revisionFiles = new ArrayList<>();
 		JsonObject revisions = review.getRevisions();
 		for (String revisionHash: revisions.keySet()) {
@@ -91,7 +91,7 @@ public class RevFinder {
 		return available;
 	}
 
-	private double getWorkload(CodeReview review) {
+	private double getWorkload(ReviewableChange review) {
 		double workload;
 		
 		workload =(double)getFiles(review).size()/getAverageNumberFiles();
@@ -99,7 +99,7 @@ public class RevFinder {
 	}
 	
 	public void printWorkload() {
-		for (CodeReview review: reviews) {
+		for (ReviewableChange review: reviews) {
 			System.out.println(getWorkload(review));
 		}
 	}
@@ -107,7 +107,7 @@ public class RevFinder {
 	public int getAverageNumberFiles() {
 		int files = 0;
 		
-		for (CodeReview review: reviews) {
+		for (ReviewableChange review: reviews) {
 			files += getFiles(review).size();
 		}
 		files /= reviews.size();
@@ -119,14 +119,12 @@ public class RevFinder {
 		return 0;
 	}
 	
-	private List<GerritUser> getCodeReviewers(CodeReview review){
-		List<GerritUser> reviewers = new ArrayList<>();
-		reviewers = review.getReviewers();
-		return reviewers;
+	private List<CodeReview> getCodeReviews(ReviewableChange change){
+		return change.getReviews();
 	}
 
-	public List<GerritUser> generateReviewerRecommendations(CodeReview review){
-		List<CodeReview> pastReviews = getPastReviews(review);
+	public List<GerritUser> generateReviewerRecommendations(ReviewableChange review){
+		List<ReviewableChange> pastReviews = getPastReviews(review);
 		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
 		Map<GerritUser, Double> reviewersWithRecommendationScore = new HashMap<>();
 		Map<GerritUser, Integer> reviewersWithRecommendationRank = new HashMap<>();
@@ -135,7 +133,7 @@ public class RevFinder {
 		int rank;
 		
 		for (int i = 0;i<3;i++) {
-			for (CodeReview reviewPast: pastReviews) {
+			for (ReviewableChange reviewPast: pastReviews) {
 				List<RevisionFile> filesN = getFiles(review);
 				List<RevisionFile> filesP = getFiles(reviewPast);
 				
@@ -158,9 +156,9 @@ public class RevFinder {
 				}
 				scoreRp /= ((filesN.size()) * (filesP.size()));
 				
-				for(GerritUser codeReviewer: getCodeReviewers(reviewPast)) {
-					score = reviewersWithRecommendationScore.getOrDefault(codeReviewer, new Double(0.0));
-					reviewersWithRecommendationScore.put(codeReviewer, score + scoreRp);
+				for(CodeReview codeReview: getCodeReviews(reviewPast)) {
+					score = reviewersWithRecommendationScore.getOrDefault(codeReview.getReviewer(), new Double(0.0));
+					reviewersWithRecommendationScore.put(codeReview.getReviewer(), score + scoreRp);
 				}
 				
 			}
@@ -199,7 +197,7 @@ public class RevFinder {
 	    	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
 	    	generator.writeStartArray();
 
-	    	for (CodeReview review : reviews) {
+	    	for (ReviewableChange review : reviews) {
 	    		generator.writeStartObject();
 	    		generator.write("review_id", review.getId());
 	    		generator.writeStartArray("recommended_reviewers");
@@ -219,14 +217,14 @@ public class RevFinder {
     	}
 	}
 
-	private List<CodeReview> loadReviews() {
-		List<CodeReview> reviews = new ArrayList<>();
+	private List<ReviewableChange> loadReviews() {
+		List<ReviewableChange> reviews = new ArrayList<>();
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("filtered/%s_changes.json", project.name))));
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
 		    			reviews = parser.getArrayStream()
-		    					.map(codeReviewJson -> new CodeReview(codeReviewJson.asJsonObject(), false))
+		    					.map(codeReviewJson -> new ReviewableChange(codeReviewJson.asJsonObject(), false))
 		    					.collect(Collectors.toList());
 		    	}
 		    }                
@@ -236,7 +234,7 @@ public class RevFinder {
 		return reviews;
 	}
 
-	private List<CodeReview> getPastReviews(CodeReview currentReview) {
+	private List<ReviewableChange> getPastReviews(ReviewableChange currentReview) {
 		return reviews.stream()
 				.filter(review -> review.getCreated().isBefore(currentReview.getCreated()))
 				.collect(Collectors.toList());
@@ -246,16 +244,18 @@ public class RevFinder {
 		double topKAccuracy = 0.0;
 		
 		
-		for (CodeReview r: reviews) {
+		for (ReviewableChange r: reviews) {
 			topKAccuracy += isCorrect(r, topK);
 		}
 		topKAccuracy  =  topKAccuracy * 100 / reviews.size();
 		return topKAccuracy;
 	}
 
-	private double isCorrect(CodeReview r, int topK) {
+	private double isCorrect(ReviewableChange r, int topK) {
 		List<GerritUser> topKReviewers = candidates(r);
-		List<GerritUser> actualReviewers = r.getReviewers();
+		List<GerritUser> actualReviewers = r.getReviews().stream()
+												.map(review -> review.getReviewer())
+												.collect(Collectors.toList());
 		
 		if (topKReviewers.size() > topK) {
 			topKReviewers = topKReviewers.subList(0, topK-1);
@@ -273,7 +273,7 @@ public class RevFinder {
 		double mRR = 0.0;
 		int temp;
 		
-		for (CodeReview r: reviews) {
+		for (ReviewableChange r: reviews) {
 			temp = rank(candidates(r), r);
 			if (temp != 0) {
 				mRR +=  (double) 1/temp;
@@ -284,9 +284,11 @@ public class RevFinder {
 		return mRR;
 	}
 
-	private int rank(List<GerritUser> candidates, CodeReview r) {
+	private int rank(List<GerritUser> candidates, ReviewableChange r) {
 		int lowestRank = -1;
-		List<GerritUser> actualReviewers = r.getReviewers();
+		List<GerritUser> actualReviewers = r.getReviews().stream()
+												.map(review -> review.getReviewer())
+												.collect(Collectors.toList());
 		
 		for (GerritUser actualReviewer: actualReviewers) {
 			for (int i = 0; i < candidates.size(); i++) {
@@ -308,7 +310,7 @@ public class RevFinder {
 		return lowestRank;
 	}
 
-	private List<GerritUser> candidates(CodeReview r) {
+	private List<GerritUser> candidates(ReviewableChange r) {
 		try {
 		    File resource = getResourceFile(String.format("revfinder/%s_recommendations.json", project.name));
 		    

@@ -4,11 +4,11 @@ import java.util.function.Function;
 
 import javax.json.JsonValue;
 
-public class ChangePreprocessor implements Function<JsonValue, CodeReview> {
+public class ChangePreprocessor implements Function<JsonValue, ReviewableChange> {
 
 	@Override
-	public CodeReview apply(JsonValue t) {
-		return new CodeReview(t.asJsonObject(), true);
+	public ReviewableChange apply(JsonValue t) {
+		return new ReviewableChange(t.asJsonObject(), true);
 	}
 
 }
