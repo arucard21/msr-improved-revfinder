@@ -32,23 +32,23 @@ public class ReviewableChange {
 		this.id = id;
 	}
 
-	public ReviewableChange(JsonObject jsonObject, boolean fullChangeJSON) {
+	public ReviewableChange(JsonObject jsonObject, boolean filtered) {
 		id = jsonObject.getString("id", "");
 		change_id = jsonObject.getString("change_id", "");
-		if (fullChangeJSON) {
-			owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
-		} else {
+		if (filtered) {
 			owner_id = jsonObject.getInt("owner", -1);
+		} else {
+			owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
 		}
 		status = jsonObject.getString("status", "");
 		setCreated(jsonObject.getString("created", ""));
 		setUpdated(jsonObject.getString("updated", ""));
 		current_revision = jsonObject.getString("current_revision", "");
-		if(fullChangeJSON) {
-			loadReviewsFromLabels(jsonObject);
+		if(filtered) {
+			loadReviewsFromReviews(jsonObject);
 		}
 		else {
-			loadReviewsFromReviews(jsonObject);
+			loadReviewsFromLabels(jsonObject);
 		}
 		loadMessages(jsonObject);
 		revisions = loadRevisions(jsonObject);
@@ -96,12 +96,12 @@ public class ReviewableChange {
 			return;
 		}
 		reviews = codeReviews.getJsonArray("all").stream()
-				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject())).collect(Collectors.toList());
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), false)).collect(Collectors.toList());
 	}
 	
 	private void loadReviewsFromReviews(JsonObject originalChange) {
 		reviews = originalChange.getJsonArray("reviews").stream()
-				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject())).collect(Collectors.toList());
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), true)).collect(Collectors.toList());
 	}
 	
 	private void loadMessages(JsonObject originalChange) {

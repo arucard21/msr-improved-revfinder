@@ -12,9 +12,15 @@ public class CodeReview {
 		this.reviewScore = reviewScore;
 	}
 
-	public CodeReview(JsonObject json) {
-		this.reviewer = new GerritUser(json.getJsonObject("reviewer"));
-		this.reviewScore = json.getInt("reviewScore", -999);
+	public CodeReview(JsonObject json, boolean filtered) {
+		if (filtered) {
+			this.reviewer = new GerritUser(json.getJsonObject("reviewer"));
+			this.reviewScore = json.getInt("reviewScore");
+		}
+		else {
+			this.reviewer = new GerritUser(json);
+			this.reviewScore = json.getInt("value");
+		}
 	}
 
 	public int getReviewScore() {
