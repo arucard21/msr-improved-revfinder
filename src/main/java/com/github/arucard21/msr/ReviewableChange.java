@@ -11,8 +11,9 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 
 import com.github.arucard21.msr.revfinder.CodeReview;
+import com.github.arucard21.msr.revfinder.Message;
 
-public class ReviewableChange{
+public class ReviewableChange {
 	private static final String JSON_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
 	private final String id;
 	private String change_id;
@@ -22,21 +23,21 @@ public class ReviewableChange{
 	private LocalDateTime updated;
 	private String current_revision;
 	private List<CodeReview> reviews = new ArrayList<>();
+	private List<Message> messages = new ArrayList<>();
 	private JsonObject revisions;
 	private String project;
 	private int number;
-	
+
 	public ReviewableChange(String id) {
 		this.id = id;
 	}
-	
+
 	public ReviewableChange(JsonObject jsonObject, boolean fullChangeJSON) {
 		id = jsonObject.getString("id", "");
 		change_id = jsonObject.getString("change_id", "");
 		if (fullChangeJSON) {
 			owner_id = jsonObject.getJsonObject("owner").getInt("_account_id", -1);
-		}
-		else {
+		} else {
 			owner_id = jsonObject.getInt("owner", -1);
 		}
 		status = jsonObject.getString("status", "");
@@ -44,14 +45,19 @@ public class ReviewableChange{
 		setUpdated(jsonObject.getString("updated", ""));
 		current_revision = jsonObject.getString("current_revision", "");
 		loadReviews(jsonObject);
+		loadMessages(jsonObject);
 		revisions = loadRevisions(jsonObject);
 		project = jsonObject.getString("project", "");
 	}
-	
+
 	public JsonObject asJsonObject() {
 		JsonArrayBuilder reviewersBuilder = Json.createArrayBuilder();
 		for(CodeReview review: reviews) {
 			reviewersBuilder.add(review.asJsonObject());
+		}
+		JsonArrayBuilder messagesBuilder = Json.createArrayBuilder();
+		for(Message msg : messages) {
+			messagesBuilder.add(msg.asJsonObject());
 		}
 		return Json.createObjectBuilder()
 				.add("id", id)
@@ -62,6 +68,7 @@ public class ReviewableChange{
 				.add("updated", fromLocalDateTime(updated))
 				.add("current_revision", current_revision)
 				.add("reviews", reviewersBuilder)
+				.add("messages", messagesBuilder)
 				.add("revisions", revisions)
 				.add("project", project)
 				.add("number", number)
@@ -69,7 +76,7 @@ public class ReviewableChange{
 	}
 
 	private JsonObject loadRevisions(JsonObject originalChange) {
-		
+
 		JsonObject revisions = originalChange.getJsonObject("revisions");
 		return revisions == null ? Json.createObjectBuilder().build() : revisions;
 	}
@@ -84,16 +91,22 @@ public class ReviewableChange{
 			return;
 		}
 		reviews = codeReviews.getJsonArray("all").stream()
-					.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject()))
-					.collect(Collectors.toList());
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject())).collect(Collectors.toList());
 	}
 	
+	private void loadMessages(JsonObject originalChange) {
+		 messages = originalChange.getJsonArray("messages").stream()
+				 .map(messageJSON -> new Message(messageJSON.asJsonObject()))
+				 .collect(Collectors.toList());
+
+	}
+
 	private LocalDateTime toLocalDateTime(String dateString) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(JSON_DATE_TIME_PATTERN);
-		LocalDateTime  date = LocalDateTime.parse(dateString, formatter);
+		LocalDateTime date = LocalDateTime.parse(dateString, formatter);
 		return date;
 	}
-	
+
 	private String fromLocalDateTime(LocalDateTime date) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(JSON_DATE_TIME_PATTERN);
 		return date.format(formatter);
@@ -130,7 +143,7 @@ public class ReviewableChange{
 	public void setCreated(LocalDateTime created) {
 		this.created = created;
 	}
-	
+
 	public void setCreated(String created) {
 		this.created = toLocalDateTime(created);
 	}
@@ -142,7 +155,7 @@ public class ReviewableChange{
 	public void setUpdated(LocalDateTime updated) {
 		this.updated = updated;
 	}
-	
+
 	public void setUpdated(String updated) {
 		this.updated = toLocalDateTime(updated);
 	}
@@ -161,6 +174,14 @@ public class ReviewableChange{
 
 	public void setReviewers(List<CodeReview> reviews) {
 		this.reviews = reviews;
+	}
+	
+	public List<Message> getMessages() {
+		return messages;
+	}
+
+	public void setMessages(List<Message> messages) {
+		this.messages = messages;
 	}
 
 	public JsonObject getRevisions() {
