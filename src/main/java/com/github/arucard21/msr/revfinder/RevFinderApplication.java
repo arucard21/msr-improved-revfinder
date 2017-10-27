@@ -8,9 +8,9 @@ public class RevFinderApplication {
 			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
 			RevFinder revFinder = new RevFinder(project );
 			revFinder.generateReviewerRecommendations();
-			System.out.println(revFinder.calculateTopKAccuracy(10));
-			System.out.println(revFinder.calculateMRR());
-			System.out.println(revFinder.getAverageNumberFiles());
+			System.out.println(project.name+" top-k accuracy = "+revFinder.calculateTopKAccuracy(10));
+			System.out.println(project.name+" MRR = "+revFinder.calculateMRR());
+			System.out.println(project.name+" average number of files = "+revFinder.getAverageNumberFiles());
 			//revFinder.printWorkload();	
 		}
 

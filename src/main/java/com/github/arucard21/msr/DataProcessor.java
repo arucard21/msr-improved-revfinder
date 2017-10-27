@@ -31,17 +31,17 @@ public class DataProcessor {
 		int resourceCount = 0;
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(resource));
+		    try {
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
-		    		try {
 		    			resourceCount+=parser.getArrayStream().count();
-		    		}
-		    		catch(JsonParsingException e) {
-		    			System.err.println("JSON Parsing error occurred with file: "+resource.getName());
-		    			return -1;
 		    		}
 		    	}
 		    }                
+		    catch(JsonParsingException e) {
+		    	System.err.println("JSON Parsing error occurred with file: "+resource.getName());
+		    	return -1;
+		    }
 		} catch (FileNotFoundException e) {
 		    e.printStackTrace();
 		}

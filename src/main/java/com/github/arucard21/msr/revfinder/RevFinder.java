@@ -110,8 +110,12 @@ public class RevFinder {
 		for (ReviewableChange review: reviews) {
 			files += getFiles(review).size();
 		}
-		files /= reviews.size();
-		return files;
+		if(reviews.size() > 0) {
+			return files / reviews.size();
+		}
+		else {			
+			return 0;
+		}
 	}
 
 	private int getNumberReviews(LocalDateTime date, GerritUser reviewer) {
@@ -220,7 +224,11 @@ public class RevFinder {
 	private List<ReviewableChange> loadReviews() {
 		List<ReviewableChange> reviews = new ArrayList<>();
 		try {
-		    JsonParser parser = Json.createParser(new FileReader(getResourceFile(String.format("filtered/%s_changes.json", project.name))));
+			File filteredChangesFile = getResourceFile(String.format("filtered/%s_changes.json", project.name));
+	    	if (!filteredChangesFile.exists()) {
+	    		return Collections.emptyList();
+	    	}
+		    JsonParser parser = Json.createParser(new FileReader(filteredChangesFile));
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
 		    			reviews = parser.getArrayStream()
@@ -247,8 +255,12 @@ public class RevFinder {
 		for (ReviewableChange r: reviews) {
 			topKAccuracy += isCorrect(r, topK);
 		}
-		topKAccuracy  =  topKAccuracy * 100 / reviews.size();
-		return topKAccuracy;
+		if(reviews.size() > 0) {
+			return  topKAccuracy * 100 / reviews.size();
+		}
+		else {			
+			return 0;
+		}
 	}
 
 	private double isCorrect(ReviewableChange r, int topK) {
@@ -280,8 +292,12 @@ public class RevFinder {
 			}
 	
 		}
-		mRR /= reviews.size();
-		return mRR;
+		if(reviews.size() > 0) {
+			return mRR / reviews.size();
+		}
+		else {
+			return 0;
+		}
 	}
 
 	private int rank(List<GerritUser> candidates, ReviewableChange r) {
@@ -327,7 +343,7 @@ public class RevFinder {
 			    			}
 			    			else {
 			    				if (recommendations.size() == 0) {
-			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
+//			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
 			    				}
 			    				else {
 			    					System.err.println(String.format("Review with ID %s gave multiple results", r.getId()));

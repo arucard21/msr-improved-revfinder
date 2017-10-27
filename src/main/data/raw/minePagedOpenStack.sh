@@ -1,7 +1,8 @@
 #!/bin/bash
 touch startedMiningOpenStack
 pageSize=500
-for year in $(seq 2017 -1 2000)
+# normal values 2017 till 2000
+for year in $(seq 2012 -1 2011)
 do
   for month in {01..12}
   do
