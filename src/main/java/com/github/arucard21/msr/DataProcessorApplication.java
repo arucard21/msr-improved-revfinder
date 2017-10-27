@@ -36,5 +36,6 @@ public class DataProcessorApplication {
 		 */
 		
 		System.out.printf("Average number of reviewers per change for OpenStack: %f\n", processor.averageNumberOfReviewers(Project.OPENSTACK));
+//		System.out.printf("Average number of reviewers per change for Qt: %f\n", processor.averageNumberOfReviewers(Project.QT));
 	}
 }

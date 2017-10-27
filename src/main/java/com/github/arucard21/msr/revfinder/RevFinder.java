@@ -3,34 +3,31 @@ package com.github.arucard21.msr.revfinder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
 import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.Project;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.Math;
-import java.time.LocalDateTime;
 
 
 public class RevFinder {
 	private final Project project;
-	private final List<ReviewableChange> changes;
+	private List<ReviewableChange> changes;
 	
 	public RevFinder(Project project) {
 		this.project = project;
-		this.changes = loadChanges();
+		loadChanges();
 	}
 
 	private double filePathSimilarity(String filen, String filep) {
@@ -49,82 +46,15 @@ public class RevFinder {
 		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
-	private List<RevisionFile> getFiles(ReviewableChange review) {
-		List<RevisionFile> revisionFiles = new ArrayList<>();
-		JsonObject revisions = review.getRevisions();
-		for (String revisionHash: revisions.keySet()) {
-			JsonObject revision = revisions.getJsonObject(revisionHash);
-			if (revision.containsKey("files")) {
-				JsonObject files = revision.getJsonObject("files");
-				for (String filePath : files.keySet()) {
-					JsonObject file = files.getJsonObject(filePath);
-					revisionFiles.add(
-							new RevisionFile(
-									filePath, 
-									file.getInt("lines_inserted",0), 
-									file.getInt("lines_deleted",0), 
-									file.getInt("sizes_delta",0), 
-									file.getInt("size",0)));
-				}
-			}
-		}
-		return revisionFiles;
-	}
-
 	private File getResourceFile(String filename) {
 		return new File("src/main/data/", filename);
 	}
-
-	private double getAvailability(GerritUser reviewer, LocalDateTime date) {
-		double[] availability = new double[7];
-		int reviews = getNumberReviews(date, reviewer);
-		double available = 0.0;
-		double logSum = 0.0;
-		
-		for (int i = 0; i < 7; i++) {
-			if (reviews > 0) {
-				availability[i] = Math.log(7 - i)/Math.log(7);
-			}
-			available += availability[i];
-			logSum += Math.log(7 - i)/Math.log(7);
-		}
-		return available;
-	}
-
-	private double getWorkload(ReviewableChange review) {
-		double workload;
-		
-		workload =(double)getFiles(review).size()/getAverageNumberFiles();
-		return workload;
-	}
 	
-	public void printWorkload() {
-		for (ReviewableChange review: changes) {
-			System.out.println(getWorkload(review));
-		}
-	}
-	
-	public int getAverageNumberFiles() {
-		int files = 0;
-		
-		for (ReviewableChange review: changes) {
-			files += getFiles(review).size();
-		}
-		if(changes.size() > 0) {
-			return files / changes.size();
-		}
-		else {			
-			return 0;
-		}
-	}
-
-	private int getNumberReviews(LocalDateTime date, GerritUser reviewer) {
-		
-		return 0;
-	}
-	
-	private List<GerritUser> getCodeReviewers(ReviewableChange change){
-		return getReviewersOfChange(change);
+	public double getAverageNumberFiles() {
+		OptionalDouble average = changes.stream()
+				.mapToDouble(change -> new Double(change.getFiles().size()))
+				.average();
+		return average.isPresent() ? average.getAsDouble() : 0.0;
 	}
 
 	public List<GerritUser> generateReviewerRecommendations(ReviewableChange change){
@@ -138,8 +68,8 @@ public class RevFinder {
 		
 		for (int i = 0;i<3;i++) {
 			for (ReviewableChange reviewPast: pastChanges) {
-				List<RevisionFile> filesN = getFiles(change);
-				List<RevisionFile> filesP = getFiles(reviewPast);
+				List<RevisionFile> filesN = change.getFiles();
+				List<RevisionFile> filesP = reviewPast.getFiles();
 				
 				scoreRp = 0.0;
 				for (RevisionFile fileN : filesN) {
@@ -160,7 +90,7 @@ public class RevFinder {
 				}
 				scoreRp /= ((filesN.size()) * (filesP.size()));
 				
-				for(GerritUser reviewer: getCodeReviewers(reviewPast)) {
+				for(GerritUser reviewer: getReviewersOfChange(reviewPast)) {
 					score = reviewersWithRecommendationScore.getOrDefault(reviewer, new Double(0.0));
 					reviewersWithRecommendationScore.put(reviewer, score + scoreRp);
 				}
@@ -221,12 +151,11 @@ public class RevFinder {
     	}
 	}
 
-	private List<ReviewableChange> loadChanges() {
-		List<ReviewableChange> changes = new ArrayList<>();
+	private void loadChanges() {
 		try {
 			File filteredChangesFile = getResourceFile(String.format("filtered/%s_changes.json", project.name));
 	    	if (!filteredChangesFile.exists()) {
-	    		return Collections.emptyList();
+	    		changes = Collections.emptyList();
 	    	}
 		    JsonParser parser = Json.createParser(new FileReader(filteredChangesFile));
 		    if(parser.hasNext()) {
@@ -239,7 +168,6 @@ public class RevFinder {
 		} catch (IOException e) {
 		    e.printStackTrace();
 		}
-		return changes;
 	}
 
 	private List<ReviewableChange> getPastReviews(ReviewableChange currentChange) {

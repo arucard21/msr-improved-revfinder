@@ -1,5 +1,8 @@
 package com.github.arucard21.msr.revfinder;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+
 public class RevisionFile {
 	private final String fileName;
 	private final int linesInserted;
@@ -15,6 +18,12 @@ public class RevisionFile {
 		this.size = size;
 	}
 	
+	public JsonObject asJsonObject(){
+		return Json.createObjectBuilder()
+				.add("fileName", getFileName())
+				.build();
+	}
+
 	
 	public String getFileName() {
 		return fileName;

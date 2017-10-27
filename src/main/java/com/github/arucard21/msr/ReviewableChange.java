@@ -12,6 +12,7 @@ import javax.json.JsonObject;
 
 import com.github.arucard21.msr.revfinder.CodeReview;
 import com.github.arucard21.msr.revfinder.Message;
+import com.github.arucard21.msr.revfinder.RevisionFile;
 
 public class ReviewableChange {
 	private static final String JSON_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.nnnnnnnnn";
@@ -25,6 +26,7 @@ public class ReviewableChange {
 	private List<CodeReview> reviews = new ArrayList<>();
 	private List<Message> messages = new ArrayList<>();
 	private JsonObject revisions;
+	private List<RevisionFile> files = new ArrayList<>();
 	private String project;
 	private int number;
 
@@ -52,6 +54,7 @@ public class ReviewableChange {
 		}
 		loadMessages(jsonObject);
 		revisions = loadRevisions(jsonObject);
+		loadFiles(jsonObject);
 		project = jsonObject.getString("project", "");
 	}
 
@@ -64,6 +67,10 @@ public class ReviewableChange {
 		for(Message msg : messages) {
 			messagesBuilder.add(msg.asJsonObject());
 		}
+		JsonArrayBuilder filesBuilder = Json.createArrayBuilder();
+		for(RevisionFile file : files) {
+			filesBuilder.add(file.asJsonObject());
+		}
 		return Json.createObjectBuilder()
 				.add("id", id)
 				.add("change_id", change_id)
@@ -75,15 +82,39 @@ public class ReviewableChange {
 				.add("reviews", reviewersBuilder)
 				.add("messages", messagesBuilder)
 				.add("revisions", revisions)
+				.add("files", filesBuilder)
 				.add("project", project)
 				.add("number", number)
 				.build();
 	}
 
 	private JsonObject loadRevisions(JsonObject originalChange) {
-
 		JsonObject revisions = originalChange.getJsonObject("revisions");
 		return revisions == null ? Json.createObjectBuilder().build() : revisions;
+	}
+
+	/**
+	 * Only run after revisions have been loaded
+	 * @param originalChange
+	 */
+	private void loadFiles(JsonObject originalChange) {
+		for (String revisionHash: revisions.keySet()) {
+			JsonObject revision = revisions.getJsonObject(revisionHash);
+			if (revision.containsKey("files")) {
+				JsonObject filesJSON = revision.getJsonObject("files");
+				for (String filePath : filesJSON.keySet()) {
+					JsonObject file = filesJSON.getJsonObject(filePath);
+					files.add(
+							new RevisionFile(
+									filePath, 
+									file.getInt("lines_inserted",0), 
+									file.getInt("lines_deleted",0), 
+									file.getInt("sizes_delta",0), 
+									file.getInt("size",0)));
+				}
+			}
+		}
+		
 	}
 
 	private void loadReviewsFromLabels(JsonObject originalChange) {
@@ -223,5 +254,13 @@ public class ReviewableChange {
 
 	public String getId() {
 		return id;
+	}
+
+	public List<RevisionFile> getFiles() {
+		return files;
+	}
+
+	public void setFiles(List<RevisionFile> files) {
+		this.files = files;
 	}
 }
