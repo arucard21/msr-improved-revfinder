@@ -234,7 +234,7 @@ public class RevFinder {
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
 		    			changes = parser.getArrayStream()
-		    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), false))
+		    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), true))
 		    					.collect(Collectors.toList());
 		    	}
 		    }                

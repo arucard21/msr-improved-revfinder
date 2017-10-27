@@ -8,7 +8,7 @@ public class ChangePreprocessor implements Function<JsonValue, ReviewableChange>
 
 	@Override
 	public ReviewableChange apply(JsonValue t) {
-		return new ReviewableChange(t.asJsonObject(), true);
+		return new ReviewableChange(t.asJsonObject(), false);
 	}
 
 }
