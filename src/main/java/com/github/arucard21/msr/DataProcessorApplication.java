@@ -34,5 +34,7 @@ public class DataProcessorApplication {
 			Filtered 5966 changes for OpenStack
 			Filtered 24789 changes for Qt
 		 */
+		
+		System.out.printf("Average number of reviewers per change for OpenStack: %f\n", processor.averageNumberOfReviewers(Project.OPENSTACK));
 	}
 }

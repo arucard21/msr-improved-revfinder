@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -117,5 +118,31 @@ public class DataProcessor {
 		}
 		return null;
 		
+	}
+
+	public double averageNumberOfReviewers(Project project) {
+	    File resource = new File(String.format("src/main/data/filtered/%s_changes.json", project.name));
+		try {
+		    JsonParser parser = Json.createParser(new FileReader(resource));
+		    try {
+			    if(parser.hasNext()) {
+			    	if (parser.next() == Event.START_ARRAY) {
+			    			OptionalDouble average = parser.getArrayStream()
+			    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), true).getReviews())
+			    					.map(reviewsForChange -> reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count())
+			    					.mapToDouble(amountOfReviews -> amountOfReviews.doubleValue())
+			    					.average();
+			    			return average.isPresent() ? average.getAsDouble() : 0.0;
+			    		}
+			    	}
+			    }                
+		    catch(JsonParsingException e) {
+		    	System.err.println("JSON Parsing error occurred with file: "+resource.getName());
+		    	return -1;
+		    }
+		} catch (FileNotFoundException e) {
+		    e.printStackTrace();
+		}
+		return 0.0;
 	}
 }
