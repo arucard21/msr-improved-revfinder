@@ -44,7 +44,12 @@ public class ReviewableChange {
 		setCreated(jsonObject.getString("created", ""));
 		setUpdated(jsonObject.getString("updated", ""));
 		current_revision = jsonObject.getString("current_revision", "");
-		loadReviews(jsonObject);
+		if(fullChangeJSON) {
+			loadReviewsFromLabels(jsonObject);
+		}
+		else {
+			loadReviewsFromReviews(jsonObject);
+		}
 		loadMessages(jsonObject);
 		revisions = loadRevisions(jsonObject);
 		project = jsonObject.getString("project", "");
@@ -81,7 +86,7 @@ public class ReviewableChange {
 		return revisions == null ? Json.createObjectBuilder().build() : revisions;
 	}
 
-	private void loadReviews(JsonObject originalChange) {
+	private void loadReviewsFromLabels(JsonObject originalChange) {
 		JsonObject labels = originalChange.getJsonObject("labels");
 		if (labels == null || labels.isEmpty()) {
 			return;
@@ -91,6 +96,11 @@ public class ReviewableChange {
 			return;
 		}
 		reviews = codeReviews.getJsonArray("all").stream()
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject())).collect(Collectors.toList());
+	}
+	
+	private void loadReviewsFromReviews(JsonObject originalChange) {
+		reviews = originalChange.getJsonArray("reviews").stream()
 				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject())).collect(Collectors.toList());
 	}
 	

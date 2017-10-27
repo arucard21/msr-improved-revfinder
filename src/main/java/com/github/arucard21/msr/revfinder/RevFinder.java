@@ -26,11 +26,11 @@ import java.time.LocalDateTime;
 
 public class RevFinder {
 	private final Project project;
-	private final List<ReviewableChange> reviews;
+	private final List<ReviewableChange> changes;
 	
 	public RevFinder(Project project) {
 		this.project = project;
-		this.reviews = loadReviews();
+		this.changes = loadChanges();
 	}
 
 	private double filePathSimilarity(String filen, String filep) {
@@ -99,7 +99,7 @@ public class RevFinder {
 	}
 	
 	public void printWorkload() {
-		for (ReviewableChange review: reviews) {
+		for (ReviewableChange review: changes) {
 			System.out.println(getWorkload(review));
 		}
 	}
@@ -107,11 +107,11 @@ public class RevFinder {
 	public int getAverageNumberFiles() {
 		int files = 0;
 		
-		for (ReviewableChange review: reviews) {
+		for (ReviewableChange review: changes) {
 			files += getFiles(review).size();
 		}
-		if(reviews.size() > 0) {
-			return files / reviews.size();
+		if(changes.size() > 0) {
+			return files / changes.size();
 		}
 		else {			
 			return 0;
@@ -123,13 +123,15 @@ public class RevFinder {
 		return 0;
 	}
 	
-	private List<CodeReview> getCodeReviews(ReviewableChange change){
-		return change.getReviews();
+	private List<GerritUser> getCodeReviewers(ReviewableChange change){
+		return change.getReviews().stream()
+				.map(review -> review.getReviewer())
+				.collect(Collectors.toList());
 	}
 
-	public List<GerritUser> generateReviewerRecommendations(ReviewableChange review){
-		List<ReviewableChange> pastReviews = getPastReviews(review);
-		Collections.sort(pastReviews, (review1, review2) -> (review1.getCreated().compareTo(review2.getCreated())));
+	public List<GerritUser> generateReviewerRecommendations(ReviewableChange change){
+		List<ReviewableChange> pastChanges = getPastReviews(change);
+		Collections.sort(pastChanges, (change1, change2) -> (change1.getCreated().compareTo(change2.getCreated())));
 		Map<GerritUser, Double> reviewersWithRecommendationScore = new HashMap<>();
 		Map<GerritUser, Integer> reviewersWithRecommendationRank = new HashMap<>();
 		Map<GerritUser, Integer> combinedReviewersRecommendationRank = new HashMap<>();
@@ -137,8 +139,8 @@ public class RevFinder {
 		int rank;
 		
 		for (int i = 0;i<3;i++) {
-			for (ReviewableChange reviewPast: pastReviews) {
-				List<RevisionFile> filesN = getFiles(review);
+			for (ReviewableChange reviewPast: pastChanges) {
+				List<RevisionFile> filesN = getFiles(change);
 				List<RevisionFile> filesP = getFiles(reviewPast);
 				
 				scoreRp = 0.0;
@@ -160,9 +162,9 @@ public class RevFinder {
 				}
 				scoreRp /= ((filesN.size()) * (filesP.size()));
 				
-				for(CodeReview codeReview: getCodeReviews(reviewPast)) {
-					score = reviewersWithRecommendationScore.getOrDefault(codeReview.getReviewer(), new Double(0.0));
-					reviewersWithRecommendationScore.put(codeReview.getReviewer(), score + scoreRp);
+				for(GerritUser reviewer: getCodeReviewers(reviewPast)) {
+					score = reviewersWithRecommendationScore.getOrDefault(reviewer, new Double(0.0));
+					reviewersWithRecommendationScore.put(reviewer, score + scoreRp);
 				}
 				
 			}
@@ -201,11 +203,11 @@ public class RevFinder {
 	    	JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
 	    	generator.writeStartArray();
 
-	    	for (ReviewableChange review : reviews) {
+	    	for (ReviewableChange change : changes) {
 	    		generator.writeStartObject();
-	    		generator.write("review_id", review.getId());
+	    		generator.write("review_id", change.getId());
 	    		generator.writeStartArray("recommended_reviewers");
-	    		generateReviewerRecommendations(review)
+	    		generateReviewerRecommendations(change)
 	    				.stream()
 	    				.map(reviewer -> reviewer.asJsonObject())
 	    				.forEach(generator::write);
@@ -221,8 +223,8 @@ public class RevFinder {
     	}
 	}
 
-	private List<ReviewableChange> loadReviews() {
-		List<ReviewableChange> reviews = new ArrayList<>();
+	private List<ReviewableChange> loadChanges() {
+		List<ReviewableChange> changes = new ArrayList<>();
 		try {
 			File filteredChangesFile = getResourceFile(String.format("filtered/%s_changes.json", project.name));
 	    	if (!filteredChangesFile.exists()) {
@@ -231,20 +233,20 @@ public class RevFinder {
 		    JsonParser parser = Json.createParser(new FileReader(filteredChangesFile));
 		    if(parser.hasNext()) {
 		    	if (parser.next() == Event.START_ARRAY) {
-		    			reviews = parser.getArrayStream()
-		    					.map(codeReviewJson -> new ReviewableChange(codeReviewJson.asJsonObject(), false))
+		    			changes = parser.getArrayStream()
+		    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), false))
 		    					.collect(Collectors.toList());
 		    	}
 		    }                
 		} catch (IOException e) {
 		    e.printStackTrace();
 		}
-		return reviews;
+		return changes;
 	}
 
-	private List<ReviewableChange> getPastReviews(ReviewableChange currentReview) {
-		return reviews.stream()
-				.filter(review -> review.getCreated().isBefore(currentReview.getCreated()))
+	private List<ReviewableChange> getPastReviews(ReviewableChange currentChange) {
+		return changes.stream()
+				.filter(review -> review.getCreated().isBefore(currentChange.getCreated()))
 				.collect(Collectors.toList());
 	}
 	
@@ -252,11 +254,11 @@ public class RevFinder {
 		double topKAccuracy = 0.0;
 		
 		
-		for (ReviewableChange r: reviews) {
+		for (ReviewableChange r: changes) {
 			topKAccuracy += isCorrect(r, topK);
 		}
-		if(reviews.size() > 0) {
-			return  topKAccuracy * 100 / reviews.size();
+		if(changes.size() > 0) {
+			return  topKAccuracy * 100 / changes.size();
 		}
 		else {			
 			return 0;
@@ -285,15 +287,15 @@ public class RevFinder {
 		double mRR = 0.0;
 		int temp;
 		
-		for (ReviewableChange r: reviews) {
+		for (ReviewableChange r: changes) {
 			temp = rank(candidates(r), r);
 			if (temp != 0) {
 				mRR +=  (double) 1/temp;
 			}
 	
 		}
-		if(reviews.size() > 0) {
-			return mRR / reviews.size();
+		if(changes.size() > 0) {
+			return mRR / changes.size();
 		}
 		else {
 			return 0;
