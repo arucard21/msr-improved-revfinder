@@ -1,8 +1,6 @@
 #!/bin/bash
-touch startedMiningOpenStack
 pageSize=500
-# normal values 2017 till 2000
-for year in $(seq 2012 -1 2011)
+for year in $(seq 2017 -1 2000)
 do
   for month in {01..12}
   do
@@ -22,8 +20,9 @@ do
 			if [ ! -f "openstack_changes_${start}_${i}.json" ]
 			then
 				echo "Retrieving page $i for OpenStack for ${start}"
-				timeout 15m curl "https://review.openstack.org/changes/?q=is:closed+before:${end}-01+after:${start}-01&o=LABELS&o=DETAILED_LABELS&o=ALL_FILES&o=DETAILED_ACCOUNTS&o=ALL_REVISIONS&S=$(expr $i \* $pageSize)&n=${pageSize}" -o "openstack_changes_${start}_${i}.json"
+				timeout 15m curl "https://review.openstack.org/changes/?q=is:closed+before:${end}-01+after:${start}-01&o=LABELS&o=DETAILED_LABELS&o=ALL_FILES&o=DETAILED_ACCOUNTS&o=ALL_REVISIONS&o=MESSAGES&S=$(expr $i \* $pageSize)&n=${pageSize}" -o "openstack_changes_${start}_${i}.json"
 				calls=`expr $calls + 1`
+				sed -i "/)]}'/d" "openstack_changes_${start}_${i}.json"
 			else
 				echo "Skipping page $i for OpenStack, already retrieved"
 			fi
@@ -35,8 +34,3 @@ do
 	done
   done
 done
-echo "Done mining, cleaning up retrieved JSON files"
-# remove non-JSON characters at beginning of new JSON files
-find . -cnewer startedMiningOpenStack -iname "openstack_changes_*.json" -exec sed -i "/)]}'/d" {} \;
-rm startedMiningOpenStack
-

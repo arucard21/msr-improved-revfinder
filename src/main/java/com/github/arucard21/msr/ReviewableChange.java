@@ -45,7 +45,7 @@ public class ReviewableChange {
 		setUpdated(jsonObject.getString("updated", ""));
 		current_revision = jsonObject.getString("current_revision", "");
 		if(filtered) {
-			loadReviewsFromReviews(jsonObject);
+			loadReviewsFromFiltered(jsonObject);
 		}
 		else {
 			loadReviewsFromLabels(jsonObject);
@@ -96,12 +96,15 @@ public class ReviewableChange {
 			return;
 		}
 		reviews = codeReviews.getJsonArray("all").stream()
-				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), false)).collect(Collectors.toList());
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), false))
+				.filter(review -> review.getReviewScore() != 0)
+				.collect(Collectors.toList());
 	}
 	
-	private void loadReviewsFromReviews(JsonObject originalChange) {
+	private void loadReviewsFromFiltered(JsonObject originalChange) {
 		reviews = originalChange.getJsonArray("reviews").stream()
-				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), true)).collect(Collectors.toList());
+				.map(reviewerJSON -> new CodeReview(reviewerJSON.asJsonObject(), true))
+				.collect(Collectors.toList());
 	}
 	
 	private void loadMessages(JsonObject originalChange) {
