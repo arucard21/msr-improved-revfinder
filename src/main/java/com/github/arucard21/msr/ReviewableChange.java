@@ -43,7 +43,7 @@ public class ReviewableChange{
 		setCreated(jsonObject.getString("created", ""));
 		setUpdated(jsonObject.getString("updated", ""));
 		current_revision = jsonObject.getString("current_revision", "");
-		loadReviewers(jsonObject);
+		loadReviews(jsonObject);
 		revisions = loadRevisions(jsonObject);
 		project = jsonObject.getString("project", "");
 	}
@@ -74,7 +74,7 @@ public class ReviewableChange{
 		return revisions == null ? Json.createObjectBuilder().build() : revisions;
 	}
 
-	private void loadReviewers(JsonObject originalChange) {
+	private void loadReviews(JsonObject originalChange) {
 		JsonObject labels = originalChange.getJsonObject("labels");
 		if (labels == null || labels.isEmpty()) {
 			return;
