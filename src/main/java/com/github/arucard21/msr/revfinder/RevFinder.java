@@ -124,9 +124,7 @@ public class RevFinder {
 	}
 	
 	private List<GerritUser> getCodeReviewers(ReviewableChange change){
-		return change.getReviews().stream()
-				.map(review -> review.getReviewer())
-				.collect(Collectors.toList());
+		return getReviewersOfChange(change);
 	}
 
 	public List<GerritUser> generateReviewerRecommendations(ReviewableChange change){
@@ -250,12 +248,12 @@ public class RevFinder {
 				.collect(Collectors.toList());
 	}
 	
-	public double calculateTopKAccuracy(int topK) {
+	public double calculateTopKAccuracy(int topK, boolean last) {
 		double topKAccuracy = 0.0;
 		
 		
 		for (ReviewableChange r: changes) {
-			topKAccuracy += isCorrect(r, topK);
+			topKAccuracy += isCorrect(r, topK, last);
 		}
 		if(changes.size() > 0) {
 			return  topKAccuracy * 100 / changes.size();
@@ -265,30 +263,74 @@ public class RevFinder {
 		}
 	}
 
-	private double isCorrect(ReviewableChange r, int topK) {
-		List<GerritUser> topKReviewers = candidates(r);
-		List<GerritUser> actualReviewers = r.getReviews().stream()
-												.map(review -> review.getReviewer())
-												.collect(Collectors.toList());
+	private double isCorrect(ReviewableChange change, int topK, boolean last) {
+		List<GerritUser> topKReviewers = candidates(change);
+		GerritUser actualReviewer = getActualReviewer(change, last);
 		
 		if (topKReviewers.size() > topK) {
 			topKReviewers = topKReviewers.subList(0, topK-1);
 		}
 		
 		for(GerritUser topKReviewer: topKReviewers) {
-			if (actualReviewers.contains(topKReviewer)) {
+			if (actualReviewer.equals(topKReviewer)) {
 				return 1.0;
 			}
 		}
 		return 0.0;
 	}
+
+	/**
+	 * Get the actual reviewer of a change.
+	 * 
+	 * The actual reviewer is one that gave a +2 review score. 
+	 * If multiple of these exist, we'll use the one that was 
+	 * chronologically first in reviewing. 
+	 * 
+	 * @param change is the change for which we want the reviewer.
+	 * @return the actual reviewer.
+	 */
+	private GerritUser getActualReviewer(ReviewableChange change, boolean last) {
+		List<CodeReview> reviews = change.getReviews();
+		List<GerritUser> reviewersWithScore2 = reviews.stream()
+				.filter(review -> review.getReviewScore() == 2)
+				.map(review -> review.getReviewer())
+				.collect(Collectors.toList());
+		if(reviewersWithScore2.size() >= 1) {
+			if(reviewersWithScore2.size() == 1) {				
+				return reviewersWithScore2.get(0);
+			}
+			else{
+				return getChronologically(reviewersWithScore2, change, last);
+			}
+		}
+		else{
+			return null;
+		}
+	}
 	
-	public double calculateMRR() {
+	private GerritUser getChronologically(List<GerritUser> reviewersWithScore2, ReviewableChange change, boolean last) {
+		List<Message> reviewerMessages = change.getMessages().stream()
+				.filter(message -> reviewersWithScore2.contains(message.getAuthor()))
+				.collect(Collectors.toList());
+		Collections.sort(reviewerMessages, (message1, message2) -> (message1.getDate().compareTo(message2.getDate())));
+		if (last) {
+			Collections.reverse(reviewerMessages);
+		}
+		return reviewerMessages.get(0).getAuthor();
+	}
+
+	private List<GerritUser> getReviewersOfChange(ReviewableChange change) {
+		return change.getReviews().stream()
+					.map(review -> review.getReviewer())
+					.collect(Collectors.toList());
+	}
+	
+	public double calculateMRR(boolean last) {
 		double mRR = 0.0;
 		int temp;
 		
 		for (ReviewableChange r: changes) {
-			temp = rank(candidates(r), r);
+			temp = rank(candidates(r), r, last);
 			if (temp != 0) {
 				mRR +=  (double) 1/temp;
 			}
@@ -302,26 +344,24 @@ public class RevFinder {
 		}
 	}
 
-	private int rank(List<GerritUser> candidates, ReviewableChange r) {
+	private int rank(List<GerritUser> candidates, ReviewableChange r, boolean last) {
 		int lowestRank = -1;
-		List<GerritUser> actualReviewers = r.getReviews().stream()
-												.map(review -> review.getReviewer())
-												.collect(Collectors.toList());
+		GerritUser actualReviewer = getActualReviewer(r, last);
 		
-		for (GerritUser actualReviewer: actualReviewers) {
-			for (int i = 0; i < candidates.size(); i++) {
-				if(actualReviewer.equals(candidates.get(i))) {
-					if(lowestRank == -1) {
+		
+		for (int i = 0; i < candidates.size(); i++) {
+			if(actualReviewer.equals(candidates.get(i))) {
+				if(lowestRank == -1) {
+					lowestRank = i;
+				}
+				else {
+					if(i < lowestRank) {
 						lowestRank = i;
 					}
-					else {
-						if(i < lowestRank) {
-							lowestRank = i;
-						}
-					}					
-				}
+				}					
 			}
 		}
+		
 		if (lowestRank == -1) {
 			return 0;
 		}
@@ -345,7 +385,7 @@ public class RevFinder {
 			    			}
 			    			else {
 			    				if (recommendations.size() == 0) {
-//			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
+			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
 			    				}
 			    				else {
 			    					System.err.println(String.format("Review with ID %s gave multiple results", r.getId()));
