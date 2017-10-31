@@ -38,7 +38,7 @@ public class AvailabilityChecker {
     public void check(Project project) throws IOException, ParseException {
 
         JSONParser parser = new JSONParser();
-        String filename = project.name + "_changes_small.json";
+        String filename = project.name + "_changes.json";
         JSONArray reviews = (JSONArray) parser.parse(new FileReader(getResourceFile(filename)));
 
         for (Object rev : reviews)
@@ -90,7 +90,29 @@ public class AvailabilityChecker {
             if(! reviewersByDay.containsKey(dateString))
                 continue;
 
-            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            //System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            if(reviewersByDay.get(dateString).contains(reviewer))
+                return true;
+        }
+
+        return false;
+    }
+
+    public boolean checkBinaryAvailabilityByDateString(String todayString, int reviewer) {
+        Date today = getDateFromString(todayString + " 00:00:00");
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(today);
+
+        for(int i = 1; i <= 7; i++)
+        {
+            cal.add(Calendar.DATE, -1);
+            Date date = cal.getTime();
+            String dateString = getDateStringFromDate(date);
+
+            if(! reviewersByDay.containsKey(dateString))
+                continue;
+
+            //System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
             if(reviewersByDay.get(dateString).contains(reviewer))
                 return true;
         }
@@ -112,7 +134,33 @@ public class AvailabilityChecker {
             if (!reviewersByDay.containsKey(dateString))
                 continue;
 
-            System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            //System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
+            if (reviewersByDay.get(dateString).contains(reviewer)) {
+                double score = Math.log(7 - i + 1) / Math.log(7);
+                avScore += score;
+                //System.out.println("  + " + i + " : " + score);
+            }
+            sum += Math.log(7 - i + 1) / Math.log(7);
+        }
+        return (float) (avScore / sum);
+    }
+
+    public float checkLogAvailabilityByDateString(String todayString, int reviewer) {
+        Date today = getDateFromString(todayString + " 00:00:00");
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(today);
+        float avScore = 0;
+        double sum = 4.3810663;
+
+        for(int i = 1; i <= 7; i++) {
+            cal.add(Calendar.DATE, -1);
+            Date date = cal.getTime();
+            String dateString = getDateStringFromDate(date);
+
+            if (!reviewersByDay.containsKey(dateString))
+                continue;
+
+            //System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
             if (reviewersByDay.get(dateString).contains(reviewer)) {
                 double score = Math.log(7 - i + 1) / Math.log(7);
                 avScore += score;
