@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class AvailabilityChecker {
-    public Map<String, Set> getReviewersByDay() {
+    public Map<String, Set<Integer>> getReviewersByDay() {
         return reviewersByDay;
     }
 
@@ -24,7 +24,7 @@ public class AvailabilityChecker {
         return newest;
     }
 
-    private Map<String, Set> reviewersByDay;
+    private Map<String, Set<Integer>> reviewersByDay;
     private Date oldest;
     private Date newest;
     private String dateFormat = "yyyy-MM-dd HH:mm:ss";
@@ -145,8 +145,8 @@ public class AvailabilityChecker {
     }
 
     private void addReview(String date, int id) {
-        Set reviewers = reviewersByDay.get(date);
-        if(reviewers == null) reviewers = new HashSet();
+        Set<Integer> reviewers = reviewersByDay.get(date);
+        if(reviewers == null) reviewers = new HashSet<>();
         reviewers.add(id);
         reviewersByDay.put(date, reviewers);
     }

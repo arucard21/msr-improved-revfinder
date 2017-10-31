@@ -1,10 +1,8 @@
 package com.github.arucard21.msr.revfinder;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -158,16 +156,16 @@ public class FilePathSimilarityComparator {
 		double ranks = 0.0;
 		int temp = 0;
 		Object[] totalRanks = null;
-		int count = 0;
+//		int count = 0;
 		
 		
 		ranks = C.get(ck);
 		totalRanks = C.values().toArray();
 		Arrays.sort(totalRanks);
 		for (int j=0; j<totalRanks.length;j++) {
-			if (totalRanks[j].equals(0.0)){
-				count = j+1;
-			}
+//			if (totalRanks[j].equals(0.0)){
+//				count = j+1;
+//			}
 			if(totalRanks[j].equals(ranks)) {
 				temp = totalRanks.length - j;
 			}

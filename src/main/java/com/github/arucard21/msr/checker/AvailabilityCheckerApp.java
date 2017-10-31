@@ -15,12 +15,12 @@ public class AvailabilityCheckerApp {
 
         AvChecker.check(Project.OPENSTACK);
 
-        Map<String, Set> reviewersAtDay = AvChecker.getReviewersByDay();
+        Map<String, Set<Integer>> reviewersAtDay = AvChecker.getReviewersByDay();
         System.out.println(reviewersAtDay.size());
         System.out.println("newest: " + AvChecker.getNewest());
         System.out.println("oldest: " + AvChecker.getOldest());
 
-        for(Entry<String, Set> date : AvChecker.getReviewersByDay().entrySet()) {
+        for(Entry<String, Set<Integer>> date : AvChecker.getReviewersByDay().entrySet()) {
             System.out.println(date.getKey() + " = " + date.getValue());
         }
 
