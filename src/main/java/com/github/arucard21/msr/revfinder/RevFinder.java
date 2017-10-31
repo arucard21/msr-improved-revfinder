@@ -30,8 +30,8 @@ public class RevFinder {
 	
 	public RevFinder(Project project) {
 		this.project = project;
-		changes = loadChanges("filtered/%s_changes.json");
-		moreFilteredChanges = loadChanges("filtered/%s_changes_within_period.json");
+		changes = loadChanges("filtered/%s_changes.json", project);
+		moreFilteredChanges = loadChanges("filtered/%s_changes_within_period.json", project);
 	}
 
 	private double filePathSimilarity(String filen, String filep) {
@@ -50,7 +50,7 @@ public class RevFinder {
 		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
-	private File getResourceFile(String filename) {
+	private static File getResourceFile(String filename) {
 		return new File("src/main/data/", filename);
 	}
 	
@@ -138,7 +138,7 @@ public class RevFinder {
 		return getRankedReviewerList(combinedReviewersRecommendationRank);
 	}
 
-	private List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
+	public static List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
 		List<GerritUser> tempList = combinedReviewersRecommendationRank.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
@@ -184,11 +184,11 @@ public class RevFinder {
     	}
 	}
 
-	private String getRecommendationsFilename(boolean moreFiltered) {
+	private static String getRecommendationsFilename(boolean moreFiltered) {
 		return moreFiltered ? "revfinder/%s_recommendations_from_within_period.json" : "revfinder/%s_recommendations.json";
 	}
 
-	private List<ReviewableChange> loadChanges(String changesFile) {
+	public static List<ReviewableChange> loadChanges(String changesFile, Project project) {
 		try {
 			File filteredChangesFile = getResourceFile(String.format(changesFile, project.name));
 	    	if (!filteredChangesFile.exists()) {
@@ -229,7 +229,7 @@ public class RevFinder {
 	}
 
 	private double isCorrect(ReviewableChange change, int topK, boolean last, boolean moreFiltered) {
-		List<GerritUser> topKReviewers = candidates(change, moreFiltered);
+		List<GerritUser> topKReviewers = candidates(change, moreFiltered, project);
 		//GerritUser actualReviewer = getFirst(change, last);
 		//if(actualReviewer == null) {
 			//return 0.0;
@@ -306,7 +306,7 @@ public class RevFinder {
 		int temp;
 		
 		for (ReviewableChange r: getChanges(moreFiltered)) {
-			temp = rank(candidates(r, moreFiltered), r, last, moreFiltered);
+			temp = rank(candidates(r, moreFiltered, project), r, last, moreFiltered);
 			if (temp != 0) {
 				mRR +=  (double) 1/temp;
 			}
@@ -347,7 +347,7 @@ public class RevFinder {
 		return lowestRank;
 	}
 
-	private List<GerritUser> candidates(ReviewableChange r, boolean moreFiltered) {
+	public static List<GerritUser> candidates(ReviewableChange r, boolean moreFiltered, Project project) {
 		try {
 		    File resource = getResourceFile(String.format(getRecommendationsFilename(moreFiltered), project.name));
 		    
