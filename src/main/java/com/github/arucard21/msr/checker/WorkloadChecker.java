@@ -34,6 +34,7 @@ public class WorkloadChecker {
     // workload == files to review
     private HashMap avgWorkloadByDay;
     private HashMap dayToWorkload;
+    private HashMap dayToWorkloadFloat;
 
 
     public WorkloadChecker() {
@@ -44,7 +45,7 @@ public class WorkloadChecker {
         workload = new HashMap<Integer, HashMap<String, Integer>>();
 
         // map<day, map<reviewerID, files>>
-        dayToWorkload = new HashMap<String, HashMap<Integer, Integer>>();
+        dayToWorkload = new HashMap<String, HashMap<Integer, Float>>();
     }
 
     public void check(Project project) throws Exception {
@@ -137,18 +138,18 @@ public class WorkloadChecker {
                 dayOnlyOnce.add(wlReview.date + wlReview.reviewerID);
 
                 // build date --> workload
-                workloadOfCurrentReview = (int) reviewerToFilesize.get(wlReview.date + wlReview.reviewerID);
-                HashMap revDayWorkload = new HashMap<Integer, Integer>();
+                float workloadOfCurrentReviewF = ((Integer)reviewerToFilesize.get(wlReview.date + wlReview.reviewerID)).floatValue();
+                HashMap revDayWorkload = new HashMap<Integer, Float>();
                 if(dayToWorkload.containsKey(wlReview.date))
                 {
                     revDayWorkload = (HashMap) dayToWorkload.get(wlReview.date);
                     if(revDayWorkload.containsKey(wlReview.reviewerID)
                             && ! dayOnlyOnce2.contains(wlReview.date + wlReview.reviewerID))
                     {
-                        workloadOfCurrentReview += (int) revDayWorkload.get(wlReview.reviewerID);
+                        workloadOfCurrentReviewF += (float) revDayWorkload.get(wlReview.reviewerID);
                     }
                 }
-                revDayWorkload.put(wlReview.reviewerID, workloadOfCurrentReview);
+                revDayWorkload.put(wlReview.reviewerID, workloadOfCurrentReviewF);
                 dayToWorkload.put(wlReview.date, revDayWorkload);
                 dayOnlyOnce2.add(wlReview.date + wlReview.reviewerID);
             }
@@ -160,9 +161,26 @@ public class WorkloadChecker {
             }
         }
 
+        // deep copy?
+        dayToWorkloadFloat = dayToWorkload;
+
+        SortedSet<String> keysString = new TreeSet<String>(dayToWorkloadFloat.keySet());
+        for (String date : keysString)
+        {
+            HashMap revWorkloads = (HashMap) dayToWorkloadFloat.get(date);
+            float max = (float) Collections.max(revWorkloads.entrySet(), Map.Entry.comparingByValue()).getValue();
+
+            SortedSet<Integer> keysInt = new TreeSet<Integer>(revWorkloads.keySet());
+            for (Integer reviewerID : keysInt)
+            {
+                //System.out.println();
+                revWorkloads.put(reviewerID, (float) revWorkloads.get(reviewerID) / max);
+            }
+        }
+
         //printWorkloadByReviewerId();
         printWorkloadByDate();
-        printAvgWorkloadByDate();
+        //printAvgWorkloadByDate();
         //printAuthorFQ(authorFq);
 
         System.out.println("\n-------------------------------------------");
@@ -255,7 +273,7 @@ public class WorkloadChecker {
             int overallWorkloadOfDay = 0;
             for (Integer reviewerID : keysInt)
             {
-                int workloadOfDay = (int) revWorkloads.get(reviewerID);
+                float workloadOfDay = (float) revWorkloads.get(reviewerID);
                 overallWorkloadOfDay += workloadOfDay;
                 System.out.println("\t" + reviewerID + " => " + workloadOfDay);
             }
@@ -370,6 +388,7 @@ public class WorkloadChecker {
         return dateString;
     }
 
+    // deprecated
     public float getAvgWorkloadByDay(String day) {
         if(! avgWorkloadByDay.containsKey(day))
             return 0;
@@ -379,10 +398,10 @@ public class WorkloadChecker {
     }
 
     public float getReviewerWorkloadByDay(int revID, String day) {
-        if(! dayToWorkload.containsKey(day))
+        if(! dayToWorkloadFloat.containsKey(day))
             return 0;
 
-        HashMap workloads = (HashMap) dayToWorkload.get(day);
+        HashMap workloads = (HashMap) dayToWorkloadFloat.get(day);
         if(! workloads.containsKey(revID))
             return 0;
 
