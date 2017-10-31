@@ -108,28 +108,28 @@ public class FilePathSimilarityComparator {
 	public double compare(String filen, String filep) {
 		String[] file1 = path2List(filen);
 		String[] file2 = path2List(filep);
-		double StringComparison = LCP(filen,filep)/Math.max(file1.length,file2.length);
+		double StringComparison = (double)LCP(filen,filep)/Math.max(file1.length,file2.length);
 		return StringComparison;
 	}
 	
 	public double compare1(String filen, String filep) {
 		String[] file1 = path2List(filen);
 		String[] file2 = path2List(filep);
-		double StringComparison = LCSuff(filen,filep)/Math.max(file1.length,file2.length);
+		double StringComparison = (double)LCSuff(filen,filep)/Math.max(file1.length,file2.length);
 		return StringComparison;
 	}
 	
 	public double compare2(String filen, String filep) {
 		String[] file1 = path2List(filen);
 		String[] file2 = path2List(filep);
-		double StringComparison = LCSubstr(filen,filep)/Math.max(file1.length,file2.length);
+		double StringComparison =(double) LCSubstr(filen,filep)/Math.max(file1.length,file2.length);
 		return StringComparison;
 	}
 	
 	public double compare3(String filen, String filep) {
 		String[] file1 = path2List(filen);
 		String[] file2 = path2List(filep);
-		double StringComparison = LCSubseq(filen,filep)/Math.max(file1.length,file2.length);
+		double StringComparison = (double) LCSubseq(filen,filep)/Math.max(file1.length,file2.length);
 		return StringComparison;
 	}
 

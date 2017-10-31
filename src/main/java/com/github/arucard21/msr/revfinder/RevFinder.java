@@ -75,13 +75,17 @@ public class RevFinder {
 		Map<GerritUser, Integer> combinedReviewersRecommendationRank = new HashMap<>();
 		double score,scoreRp;
 		int rank;
-		
+		List<RevisionFile> filesN = change.getFiles();
 
 		for (int i = 0;i<=3;i++) {
 			reviewersWithRecommendationScore = new HashMap<>();
 			for (ReviewableChange reviewPast: pastChanges) {
-				List<RevisionFile> filesN = change.getFiles();
+				
 				List<RevisionFile> filesP = reviewPast.getFiles();
+				
+				if(filesP.size() == 0) {
+					continue;
+				}
 				
 				scoreRp = 0.0;
 				for (RevisionFile fileN : filesN) {
@@ -103,9 +107,9 @@ public class RevFinder {
 				if (!(filesN.size() == 0)) {
 					scoreRp /= filesN.size();
 				}
-				if (!(filesP.size() == 0)) {
-					scoreRp /= filesP.size();
-				}
+				
+				scoreRp /= filesP.size();
+				
 				for(GerritUser reviewer: getReviewersOfChange(reviewPast)) {
 					score = reviewersWithRecommendationScore.getOrDefault(reviewer, new Double(0.0));
 					reviewersWithRecommendationScore.put(reviewer, score + scoreRp);
