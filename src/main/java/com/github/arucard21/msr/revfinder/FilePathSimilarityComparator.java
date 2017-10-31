@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class FilePathSimilarityComparator {
 	
-	private String[] path2List(String fileString){
+	protected String[] path2List(String fileString){
 		return fileString.split("/"); 
 	}
 	
@@ -156,16 +156,13 @@ public class FilePathSimilarityComparator {
 		double ranks = 0.0;
 		int temp = 0;
 		Object[] totalRanks = null;
-//		int count = 0;
 		
 		
 		ranks = C.get(ck);
 		totalRanks = C.values().toArray();
 		Arrays.sort(totalRanks);
 		for (int j=0; j<totalRanks.length;j++) {
-//			if (totalRanks[j].equals(0.0)){
-//				count = j+1;
-//			}
+
 			if(totalRanks[j].equals(ranks)) {
 				temp = totalRanks.length - j;
 			}

@@ -28,10 +28,18 @@ public class GerritUser {
 
 	private final int id;
 	private final String name;
+	private double LCPScore;
+	private double LCSuffScore;
+	private double LCSubseqScore;
+	private double LCSubstrScore;
 	
 	public GerritUser(int id, String name) {
 		this.id = id;
 		this.name = name;
+		setLCPScore(0.0);
+		setLCSuffScore(0.0);
+		setLCSubseqScore(0.0);
+		setLCSubstrScore(0.0);
 	}
 
 	public GerritUser(JsonObject json) {
@@ -54,9 +62,53 @@ public class GerritUser {
 	}
 	
 	public JsonObject asJsonObject(){
+		try {
 		return Json.createObjectBuilder()
 				.add("_account_id", getId())
 				.add("name", getName())
+				.add("LCPScore", getLCPScore())
+				.add("LCSuffScore", getLCSuffScore())
+				.add("LCSubstrScore", getLCSubstrScore())
+				.add("LCSubseqScore", getLCSubseqScore())
 				.build();
+	
+		}catch(java.lang.NumberFormatException e) {
+			return Json.createObjectBuilder()
+					.add("_account_id", getId())
+					.add("name", getName())
+					.build();
+		}
+	}
+
+	public double getLCPScore() {
+		return LCPScore;
+	}
+
+	public void setLCPScore(Double lCPScore) {
+		LCPScore = lCPScore;
+	}
+
+	public double getLCSuffScore() {
+		return LCSuffScore;
+	}
+
+	public void setLCSuffScore(Double lCSuffScore) {
+		LCSuffScore = lCSuffScore;
+	}
+
+	public double getLCSubseqScore() {
+		return LCSubseqScore;
+	}
+
+	public void setLCSubseqScore(Double lCSubseqScore) {
+		LCSubseqScore = lCSubseqScore;
+	}
+
+	public double getLCSubstrScore() {
+		return LCSubstrScore;
+	}
+
+	public void setLCSubstrScore(Double lCSubstrScore) {
+		LCSubstrScore = lCSubstrScore;
 	}
 }

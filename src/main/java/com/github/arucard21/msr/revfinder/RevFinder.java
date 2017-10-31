@@ -4,6 +4,11 @@ package com.github.arucard21.msr.revfinder;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -13,6 +18,8 @@ import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
 import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.Project;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.io.File;
@@ -68,13 +75,15 @@ public class RevFinder {
 	public List<GerritUser> generateReviewerRecommendations(ReviewableChange change, boolean moreFiltered){
 		List<ReviewableChange> pastChanges = getPastReviews(change, moreFiltered);
 		Collections.sort(pastChanges, (change1, change2) -> (change1.getCreated().compareTo(change2.getCreated())));
-		Map<GerritUser, Double> reviewersWithRecommendationScore = new HashMap<>();
+		Map<GerritUser, Double> reviewersWithRecommendationScore;
 		Map<GerritUser, Integer> reviewersWithRecommendationRank = new HashMap<>();
 		Map<GerritUser, Integer> combinedReviewersRecommendationRank = new HashMap<>();
 		double score,scoreRp;
 		int rank;
 		
-		for (int i = 0;i<3;i++) {
+
+		for (int i = 0;i<=3;i++) {
+			reviewersWithRecommendationScore = new HashMap<>();
 			for (ReviewableChange reviewPast: pastChanges) {
 				List<RevisionFile> filesN = change.getFiles();
 				List<RevisionFile> filesP = reviewPast.getFiles();
@@ -96,14 +105,31 @@ public class RevFinder {
 						}
 					}
 				}
-				scoreRp /= ((filesN.size()) * (filesP.size()));
-				
+				if (!(filesN.size() == 0)) {
+					scoreRp /= filesN.size();
+				}
+				if (!(filesP.size() == 0)) {
+					scoreRp /= filesP.size();
+				}
 				for(GerritUser reviewer: getReviewersOfChange(reviewPast)) {
 					score = reviewersWithRecommendationScore.getOrDefault(reviewer, new Double(0.0));
 					reviewersWithRecommendationScore.put(reviewer, score + scoreRp);
 				}
 				
+				
 			}
+			for (GerritUser reviewer: reviewersWithRecommendationScore.keySet()) {
+				if (i == 0) {
+					reviewer.setLCPScore(reviewersWithRecommendationScore.get(reviewer));
+				}else if (i == 1) {
+					reviewer.setLCSuffScore(reviewersWithRecommendationScore.get(reviewer));
+				}else if (i == 2) {
+					reviewer.setLCSubstrScore(reviewersWithRecommendationScore.get(reviewer));
+				}else if (i == 3) {
+					reviewer.setLCSubseqScore(reviewersWithRecommendationScore.get(reviewer));
+				}
+			}
+			
 			reviewersWithRecommendationRank = new FilePathSimilarityComparator().combination(reviewersWithRecommendationScore);
 			for (GerritUser ck:reviewersWithRecommendationRank.keySet()) {
 				rank = combinedReviewersRecommendationRank.getOrDefault(ck, new Integer(0));
@@ -192,9 +218,8 @@ public class RevFinder {
 	public double calculateTopKAccuracy(int topK, boolean last, boolean moreFiltered) {
 		double topKAccuracy = 0.0;
 		
-		
 		for (ReviewableChange r: getChanges(moreFiltered)) {
-			topKAccuracy += isCorrect(r, topK, last, moreFiltered);
+			topKAccuracy += isCorrect(r, topK, last,moreFiltered);
 		}
 		if(getChanges(moreFiltered).size() > 0) {
 			return  topKAccuracy * 100 / getChanges(moreFiltered).size();
@@ -206,17 +231,18 @@ public class RevFinder {
 
 	private double isCorrect(ReviewableChange change, int topK, boolean last, boolean moreFiltered) {
 		List<GerritUser> topKReviewers = candidates(change, moreFiltered);
-		GerritUser actualReviewer = getActualReviewer(change, last);
-		if(actualReviewer == null) {
-			return 0.0;
-		}
+		//GerritUser actualReviewer = getFirst(change, last);
+		//if(actualReviewer == null) {
+			//return 0.0;
+		//}
+		List<GerritUser> actualReviewers = getActualReviewers(change);
 		
 		if (topKReviewers.size() > topK) {
 			topKReviewers = topKReviewers.subList(0, topK-1);
 		}
 		
 		for(GerritUser topKReviewer: topKReviewers) {
-			if (actualReviewer.equals(topKReviewer)) {
+			if (actualReviewers.contains(topKReviewer)) {
 				return 1.0;
 			}
 		}
@@ -236,6 +262,7 @@ public class RevFinder {
 	private GerritUser getActualReviewer(ReviewableChange change, boolean last) {
 		List<CodeReview> reviews = change.getReviews();
 		List<GerritUser> reviewersWithScore2 = reviews.stream()
+				.parallel()
 				.filter(review -> review.getReviewScore() == 2)
 				.map(review -> review.getReviewer())
 				.collect(Collectors.toList());
@@ -252,8 +279,39 @@ public class RevFinder {
 		}
 	}
 	
+	private GerritUser getFirstNonBotMessage(ReviewableChange change, boolean last) {
+		List<GerritUser> bots = new ArrayList<>();
+		bots.add(new GerritUser(3,"Jenkins"));
+		bots.add(new GerritUser(9,"LaunchpadSync"));
+		bots.add(new GerritUser(2166,"SmokeStack CI"));
+		bots.add(new GerritUser(5494,"Trivial Rebase"));
+		bots.add(new GerritUser(8871,"Elastic Recheck"));
+		
+		List<GerritUser> first = change.getMessages().stream()
+				.parallel()
+				.filter(message -> !bots.contains(message.getAuthor()))
+				.map(message -> message.getAuthor())
+				.collect(Collectors.toList());
+		if (first.size() != 0) {
+			return first.get(0);
+		}else {
+			return null;
+		}
+	}
+	
+	private List<GerritUser> getActualReviewers(ReviewableChange change) {
+		List<CodeReview> reviews = change.getReviews();
+		List<GerritUser> reviewersWithScore2 = reviews.stream()
+				.parallel()
+				.filter(review -> review.getReviewScore() == 2 || review.getReviewScore() == 1)
+				.map(review -> review.getReviewer())
+				.collect(Collectors.toList());
+			return reviewersWithScore2;
+	}
+	
 	private GerritUser getChronologically(List<GerritUser> reviewersWithScore2, ReviewableChange change, boolean last) {
 		List<Message> reviewerMessages = change.getMessages().stream()
+				.parallel()
 				.filter(message -> reviewersWithScore2.contains(message.getAuthor()))
 				.collect(Collectors.toList());
 		Collections.sort(reviewerMessages, (message1, message2) -> (message1.getDate().compareTo(message2.getDate())));
@@ -265,6 +323,7 @@ public class RevFinder {
 
 	private List<GerritUser> getReviewersOfChange(ReviewableChange change) {
 		return change.getReviews().stream()
+					.parallel()
 					.map(review -> review.getReviewer())
 					.collect(Collectors.toList());
 	}
@@ -290,13 +349,14 @@ public class RevFinder {
 
 	private int rank(List<GerritUser> candidates, ReviewableChange r, boolean last, boolean moreFiltered) {
 		int lowestRank = -1;
-		GerritUser actualReviewer = getActualReviewer(r, last);
-		if(actualReviewer == null) {
-			return 0;
-		}
+		//GerritUser actualReviewer = getFirst(r, last);
+		//if(actualReviewer == null) {
+			//return 0;
+		//}
+		List<GerritUser> actualReviewers = getActualReviewers(r);
 		
 		for (int i = 0; i < candidates.size(); i++) {
-			if(actualReviewer.equals(candidates.get(i))) {
+			if(actualReviewers.contains(candidates.get(i))) {
 				if(lowestRank == -1) {
 					lowestRank = i;
 				}
@@ -323,6 +383,7 @@ public class RevFinder {
 		    	try {
 			    	if (parser.next() == Event.START_ARRAY) {
 			    			List<ReviewRecommendations> recommendations = parser.getArrayStream()
+			    					.parallel()
 			    					.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject().getString("review_id"), recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
 			    					.filter(recommendation -> recommendation.getReviewID().equals(r.getId()))
 			    					.collect(Collectors.toList());
