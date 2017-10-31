@@ -1,7 +1,6 @@
 package com.github.arucard21.msr;
 
-public enum Project {ANDROID("android"), CHROMIUM("chromium"), OPENSTACK("openstack"), QT("qt"), WIKIMEDIA("wikimedia"),
-	ECLIPSE("eclipse");
+public enum Project {OPENSTACK("openstack"), QT("qt"), MEDIAWIKI("mediawiki"), ECLIPSE("eclipse");
 
 	public final String name;
 	Project(String name){

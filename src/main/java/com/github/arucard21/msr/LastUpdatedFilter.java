@@ -26,9 +26,9 @@ public class LastUpdatedFilter implements Predicate<JsonValue> {
 
 	private LocalDateTime getEndDate() {
 		switch (project) {
-		case ANDROID: 
-			return LocalDateTime.of(2012, Month.JANUARY, 1, 0, 0);
-		case CHROMIUM: 
+		case ECLIPSE: 
+			return LocalDateTime.of(2012, Month.MAY, 1, 0, 0);
+		case MEDIAWIKI: 
 			return LocalDateTime.of(2012, Month.MAY, 1, 0, 0);
 		case OPENSTACK: 
 			return LocalDateTime.of(2012, Month.MAY, 1, 0, 0);
@@ -41,9 +41,9 @@ public class LastUpdatedFilter implements Predicate<JsonValue> {
 
 	private LocalDateTime getStartDate() {
 		switch (project) {
-		case ANDROID: 
-			return LocalDateTime.of(2008, Month.OCTOBER, 1, 0, 0);
-		case CHROMIUM: 
+		case ECLIPSE: 
+			return LocalDateTime.of(2011, Month.MAY, 1, 0, 0);
+		case MEDIAWIKI: 
 			return LocalDateTime.of(2011, Month.MAY, 1, 0, 0);
 		case OPENSTACK: 
 			return LocalDateTime.of(2011, Month.JULY, 1, 0, 0);
