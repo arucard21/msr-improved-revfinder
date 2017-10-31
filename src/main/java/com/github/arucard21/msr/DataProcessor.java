@@ -147,7 +147,7 @@ public class DataProcessor {
 			    			parser.getArrayStream()
 			    					.filter(new CreatedFilter(project)) //We can add multiple pre-processing filters here
 	               					.map(new ChangePreprocessor())
-	               					.filter(change -> change.getReviews().stream().filter(review -> review.getReviewScore() == 2).count() != 0)
+	               					.filter(change -> change.getReviews().stream().filter(review -> review.getReviewScore() >= 1).count() != 0)
 	               					.map((change) -> change.asJsonObject())
 			    					.forEach(generator::write);
 			    	}
@@ -178,33 +178,15 @@ public class DataProcessor {
 	}
 
 	public double averageNumberOfReviewers(Project project) {
-	    File resource = new File(String.format("src/main/data/filtered/%s_changes.json", project.name));
-		try {
-		    JsonParser parser = Json.createParser(new FileReader(resource));
-		    try {
-			    if(parser.hasNext()) {
-			    	if (parser.next() == Event.START_ARRAY) {
-			    			OptionalDouble average = parser.getArrayStream()
-			    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), true).getReviews())
-			    					.map(reviewsForChange -> reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count())
-			    					.mapToDouble(amountOfReviews -> amountOfReviews.doubleValue())
-			    					.average();
-			    			return average.isPresent() ? average.getAsDouble() : 0.0;
-			    		}
-			    	}
-			    }                
-		    catch(JsonParsingException e) {
-		    	System.err.println("JSON Parsing error occurred with file: "+resource.getName());
-		    	return -1;
-		    }
-		} catch (FileNotFoundException e) {
-		    e.printStackTrace();
-		}
-		return 0.0;
+		return averageNumberOfReviewersForMoreFilteredData(project, "src/main/data/filtered/%s_changes.json");
 	}
 
 	public double averageNumberOfReviewersForMoreFilteredData(Project project) {
-	    File resource = new File(String.format("src/main/data/filtered/%s_changes_within_period.json", project.name));
+		return averageNumberOfReviewersForMoreFilteredData(project, "src/main/data/filtered/%s_changes_within_period.json");
+	}
+	
+	public double averageNumberOfReviewersForMoreFilteredData(Project project, String fileName) {
+	    File resource = new File(String.format(fileName, project.name));
 		try {
 		    JsonParser parser = Json.createParser(new FileReader(resource));
 		    try {
@@ -212,7 +194,15 @@ public class DataProcessor {
 			    	if (parser.next() == Event.START_ARRAY) {
 			    			OptionalDouble average = parser.getArrayStream()
 			    					.map(changeJSON -> new ReviewableChange(changeJSON.asJsonObject(), true).getReviews())
-			    					.map(reviewsForChange -> reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count())
+			    					.map(reviewsForChange -> {
+			    						long reviewersWith2 = reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count();
+			    						if(reviewersWith2 == 0) {
+			    							return reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count();
+			    						}
+			    						else{
+			    							return reviewersWith2;
+			    						}
+			    					})
 			    					.mapToDouble(amountOfReviews -> amountOfReviews.doubleValue())
 			    					.average();
 			    			return average.isPresent() ? average.getAsDouble() : 0.0;

@@ -8,9 +8,9 @@ public class DataProcessorApplication {
 		DataProcessor processor = new DataProcessor();
 
 //		System.out.printf("Collected %d changes from Gerrit for Eclipse\n", processor.countChangesForProject(Project.ECLIPSE));
-		System.out.printf("Collected %d changes from Gerrit for MediaWiki\n", processor.countChangesForProject(Project.MEDIAWIKI));
-		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countChangesForProject(Project.OPENSTACK));
-		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
+//		System.out.printf("Collected %d changes from Gerrit for MediaWiki\n", processor.countChangesForProject(Project.MEDIAWIKI));
+//		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countChangesForProject(Project.OPENSTACK));
+//		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
 		System.out.println("");
 
 //		processor.filter(Project.ECLIPSE);
@@ -47,21 +47,21 @@ public class DataProcessorApplication {
 	Collected 374874 changes from Gerrit for MediaWiki
 	Collected 496568 changes from Gerrit for OpenStack
 	Collected 181337 changes from Gerrit for Qt
+
+	Filtered 5590 changes for MediaWiki
+	Filtered 5128 changes for OpenStack
+	Filtered 22464 changes for Qt
 	
-	Filtered 5568 changes for MediaWiki
-	Filtered 4994 changes for OpenStack
-	Filtered 21919 changes for Qt
+	Filtered 5445 changes even more for MediaWiki
+	Filtered 4988 changes even more for OpenStack
+	Filtered 21851 changes even more for Qt
 	
-	Filtered 5430 changes even more for MediaWiki
-	Filtered 4858 changes even more for OpenStack
-	Filtered 21368 changes even more for Qt
+	Average number of reviewers per change for MediaWiki: 1.003220
+	Average number of reviewers per change for OpenStack: 1.422582
+	Average number of reviewers per change for Qt: 1.040598
 	
-	Average number of reviewers per change for MediaWiki: 1.007184
-	Average number of reviewers per change for OpenStack: 1.460753
-	Average number of reviewers per change for Qt: 1.066472
-	
-	Average number of reviewers per change (more filtered) for MediaWiki: 1.007182
-	Average number of reviewers per change (more filtered) for OpenStack: 1.457390
-	Average number of reviewers per change (more filtered) for Qt: 1.065706
+	Average number of reviewers per change (more filtered) for MediaWiki: 1.004408
+	Average number of reviewers per change (more filtered) for OpenStack: 1.419407
+	Average number of reviewers per change (more filtered) for Qt: 1.042149
 	 */
 }
