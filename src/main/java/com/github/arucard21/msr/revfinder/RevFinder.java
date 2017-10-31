@@ -4,11 +4,6 @@ package com.github.arucard21.msr.revfinder;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -249,33 +244,20 @@ public class RevFinder {
 		return 0.0;
 	}
 
-	/**
-	 * Get the actual reviewer of a change.
-	 * 
-	 * The actual reviewer is one that gave a +2 review score. 
-	 * If multiple of these exist, we'll use the one that was 
-	 * chronologically first in reviewing. 
-	 * 
-	 * @param change is the change for which we want the reviewer.
-	 * @return the actual reviewer.
-	 */
-	private GerritUser getActualReviewer(ReviewableChange change, boolean last) {
+	private List<GerritUser> getActualReviewers(ReviewableChange change) {
 		List<CodeReview> reviews = change.getReviews();
-		List<GerritUser> reviewersWithScore2 = reviews.stream()
-				.parallel()
+		List<GerritUser> reviewersWithScore2 = reviews.parallelStream()
 				.filter(review -> review.getReviewScore() == 2)
 				.map(review -> review.getReviewer())
 				.collect(Collectors.toList());
-		if(reviewersWithScore2.size() >= 1) {
-			if(reviewersWithScore2.size() == 1) {				
-				return reviewersWithScore2.get(0);
-			}
-			else{
-				return getChronologically(reviewersWithScore2, change, last);
-			}
+		if(reviewersWithScore2.size() >= 1) {	
+			return reviewersWithScore2;
 		}
 		else{
-			return null;
+			return reviews.parallelStream()
+					.filter(review -> review.getReviewScore() == 1)
+					.map(review -> review.getReviewer())
+					.collect(Collectors.toList());
 		}
 	}
 	
@@ -287,8 +269,7 @@ public class RevFinder {
 		bots.add(new GerritUser(5494,"Trivial Rebase"));
 		bots.add(new GerritUser(8871,"Elastic Recheck"));
 		
-		List<GerritUser> first = change.getMessages().stream()
-				.parallel()
+		List<GerritUser> first = change.getMessages().parallelStream()
 				.filter(message -> !bots.contains(message.getAuthor()))
 				.map(message -> message.getAuthor())
 				.collect(Collectors.toList());
@@ -299,19 +280,8 @@ public class RevFinder {
 		}
 	}
 	
-	private List<GerritUser> getActualReviewers(ReviewableChange change) {
-		List<CodeReview> reviews = change.getReviews();
-		List<GerritUser> reviewersWithScore2 = reviews.stream()
-				.parallel()
-				.filter(review -> review.getReviewScore() == 2 || review.getReviewScore() == 1)
-				.map(review -> review.getReviewer())
-				.collect(Collectors.toList());
-			return reviewersWithScore2;
-	}
-	
 	private GerritUser getChronologically(List<GerritUser> reviewersWithScore2, ReviewableChange change, boolean last) {
-		List<Message> reviewerMessages = change.getMessages().stream()
-				.parallel()
+		List<Message> reviewerMessages = change.getMessages().parallelStream()
 				.filter(message -> reviewersWithScore2.contains(message.getAuthor()))
 				.collect(Collectors.toList());
 		Collections.sort(reviewerMessages, (message1, message2) -> (message1.getDate().compareTo(message2.getDate())));
@@ -322,8 +292,7 @@ public class RevFinder {
 	}
 
 	private List<GerritUser> getReviewersOfChange(ReviewableChange change) {
-		return change.getReviews().stream()
-					.parallel()
+		return change.getReviews().parallelStream()
 					.map(review -> review.getReviewer())
 					.collect(Collectors.toList());
 	}
@@ -383,7 +352,6 @@ public class RevFinder {
 		    	try {
 			    	if (parser.next() == Event.START_ARRAY) {
 			    			List<ReviewRecommendations> recommendations = parser.getArrayStream()
-			    					.parallel()
 			    					.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject().getString("review_id"), recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
 			    					.filter(recommendation -> recommendation.getReviewID().equals(r.getId()))
 			    					.collect(Collectors.toList());
