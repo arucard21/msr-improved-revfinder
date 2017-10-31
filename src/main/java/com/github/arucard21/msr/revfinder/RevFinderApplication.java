@@ -25,5 +25,22 @@ public class RevFinderApplication {
 			System.out.println(project.name+" average number of files = "+revFinder.getAverageNumberFiles(true));
 //		}
 
+		/*
+		Generated recommended reviewers for openstack
+		Generated recommended reviewers for openstack
+		Results for data filtered only on created date:
+		openstack top-k accuracy for first = 75.65078093712455
+		openstack top-k accuracy for last = 72.4669603524229
+		openstack MRR for first = 0.41792055228178493
+		openstack MRR for last = 0.3955286820374921
+		openstack average number of files = 15.713656387665198
+		
+		Results for more filtered data:
+		openstack top-k accuracy for first = 75.3808151502676
+		openstack top-k accuracy for last = 72.16961712638945
+		openstack MRR for first = 0.41646988766688103
+		openstack MRR for last = 0.394677164814052
+		openstack average number of files = 15.248867846850557
+		 */
 	}
 }
