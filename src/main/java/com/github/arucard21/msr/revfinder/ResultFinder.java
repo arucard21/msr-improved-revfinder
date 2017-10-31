@@ -36,8 +36,6 @@ public class ResultFinder {
 		changes = RevFinder.loadChanges("filtered/%s_changes.json", project);
 	}
 
-
-
 	private List<GerritUser> calcBinaryAVRecommendation(ReviewableChange change) {
 		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
 		Map<GerritUser, Double> ranking = new HashMap<>();
@@ -69,7 +67,7 @@ public class ResultFinder {
 		}
 	}
 
-	public void writeRecommendations(String appendix){
+	public void generateRecommendations(String appendix){
 		HashMap<String, Object> config = new HashMap<>();
 		config.put(JsonGenerator.PRETTY_PRINTING, true);
 		File outputFile = getResourceFile(String.format(getRecommendationsFilename(appendix), project.name));

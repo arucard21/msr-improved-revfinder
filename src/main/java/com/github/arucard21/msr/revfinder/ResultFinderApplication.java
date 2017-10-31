@@ -35,7 +35,7 @@ public class ResultFinderApplication {
 		// openstack ... with log AV (0.3)  = 42.49098918702443
 		// openstack ... with log AV (0.4)  = 18.702442931517822
 
-		resultFinder.writeRecommendations("AV_binary");
+		resultFinder.generateRecommendations("AV_binary");
 
 	}
 
