@@ -17,10 +17,9 @@ import java.util.stream.Collectors;
 
 public class ResultFinder {
 	private final Project project;
-	private List<ReviewableChange> changes;
-	//private List<ReviewableChange> moreFilteredChanges;
 	private AvailabilityChecker AvChecker;
 	private WorkloadChecker WlChecker;
+	private RevFinderEvaluation revFinderEvaluation;
 
 	public ResultFinder(Project project) throws Exception {
 		this.project = project;
@@ -31,11 +30,11 @@ public class ResultFinder {
 		WlChecker = new WorkloadChecker();
 		WlChecker.check(project);
 
-		changes = RevFinder.loadChanges("filtered/%s_changes.json", project);
+		revFinderEvaluation = new RevFinderEvaluation(project);
 	}
 
 	private List<GerritUser> calcBinaryAVRecommendation(ReviewableChange change) {
-		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
+		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
 		Map<GerritUser, Double> ranking = new HashMap<>();
 		String dateString = change.getCreated().toString().substring(0, 10);
 
@@ -55,7 +54,7 @@ public class ResultFinder {
 	}
 
 	private List<GerritUser> calcLogAVRecommendation(ReviewableChange change, double threshold, boolean removeUnderThreshold) {
-		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
+		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
 		Map<GerritUser, Double> ranking = new HashMap<>();
 		String dateString = change.getCreated().toString().substring(0, 10);
 
@@ -78,7 +77,7 @@ public class ResultFinder {
 	}
 
 	private List<GerritUser> calcWLRecommendation(ReviewableChange change, double maximum, boolean removeOverMaximum) {
-		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
+		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
 		Map<GerritUser, Double> ranking = new HashMap<>();
 		String dateString = change.getCreated().toString().substring(0, 10);
 
@@ -130,7 +129,7 @@ public class ResultFinder {
 			JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
 			generator.writeStartArray();
 
-			for (ReviewableChange change : changes) {
+			for (ReviewableChange change : revFinderEvaluation.getChanges(false)) {
 				generator.writeStartObject();
 				generator.write("review_id", change.getId());
 				generator.writeStartArray("recommended_reviewers");

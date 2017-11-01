@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 import javax.json.stream.JsonParser;
-import javax.json.stream.JsonParsingException;
 import javax.json.stream.JsonParser.Event;
 import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.Project;
@@ -49,7 +48,7 @@ public class RevFinder {
 		return new FilePathSimilarityComparator().compare3(filen,filep);
 	}
 
-	private static File getResourceFile(String filename) {
+	private File getResourceFile(String filename) {
 		return new File("src/main/data/", filename);
 	}
 	
@@ -113,8 +112,6 @@ public class RevFinder {
 					score = reviewersWithRecommendationScore.getOrDefault(reviewer, new Double(0.0));
 					reviewersWithRecommendationScore.put(reviewer, score + scoreRp);
 				}
-				
-				
 			}
 			for (GerritUser reviewer: reviewersWithRecommendationScore.keySet()) {
 				if (i == 0) {
@@ -137,7 +134,7 @@ public class RevFinder {
 		return getRankedReviewerList(combinedReviewersRecommendationRank);
 	}
 
-	public static List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
+	private List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
 		List<GerritUser> tempList = combinedReviewersRecommendationRank.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
@@ -183,11 +180,11 @@ public class RevFinder {
     	}
 	}
 
-	private static String getRecommendationsFilename(boolean moreFiltered) {
+	private String getRecommendationsFilename(boolean moreFiltered) {
 		return moreFiltered ? "revfinder/%s_recommendations_from_within_period.json" : "revfinder/%s_recommendations.json";
 	}
 
-	public static List<ReviewableChange> loadChanges(String changesFile, Project project) {
+	private List<ReviewableChange> loadChanges(String changesFile, Project project) {
 		try {
 			File filteredChangesFile = getResourceFile(String.format(changesFile, project.name));
 	    	if (!filteredChangesFile.exists()) {
@@ -213,139 +210,9 @@ public class RevFinder {
 				.collect(Collectors.toList());
 	}
 	
-	public Map<Integer, Double> calculateTopKAccuracy(List<Integer> valuesForK, boolean moreFiltered) {
-		Map<Integer, Double> topKAccuracies = new HashMap<>();
-		//ensure that the accuracy for each K is never null
-		for (Integer valueForK : valuesForK) {
-			topKAccuracies.put(valueForK, 0.0);
-		}
-		
-		for (ReviewableChange r: getChanges(moreFiltered)) {
-			Map<Integer, Boolean> correctPerK = isCorrect(r, valuesForK, moreFiltered);
-			for (Integer valueForK : valuesForK) {
-				topKAccuracies.put(valueForK, topKAccuracies.get(valueForK) + (correctPerK.get(valueForK) ? 1.0 : 0.0));
-			}
-		}
-		if(getChanges(moreFiltered).size() > 0) {
-			for (Integer valueForK : valuesForK) {
-				topKAccuracies.put(valueForK, ((topKAccuracies.get(valueForK) * 100) / getChanges(moreFiltered).size()));
-			}
-		}
-		return topKAccuracies;
-	}
-
-	private Map<Integer, Boolean> isCorrect(ReviewableChange change, List<Integer> valuesForK, boolean moreFiltered) {
-		List<GerritUser> topKReviewers = candidates(change, moreFiltered, project);
-		List<GerritUser> actualReviewers = getActualReviewers(change);
-		Map<Integer, Boolean> correctPerK = new HashMap<>();
-		
-		for(int i = 0; i < topKReviewers.size(); i++) {
-			GerritUser topKReviewer = topKReviewers.get(i); 
-			if (actualReviewers.contains(topKReviewer)) {
-				for (Integer valueForK : valuesForK) {
-					if (i < valueForK) {
-						correctPerK.put(valueForK, true);
-						break;
-					}
-				}
-			}
-		}
-		// make sure every k has a value
-		for(Integer valueForK : valuesForK) {
-			if (correctPerK.get(valueForK) == null) {
-				correctPerK.put(valueForK, false);
-			}
-		}
-		return correctPerK;
-	}
-
-	private List<GerritUser> getActualReviewers(ReviewableChange change) {
-		List<CodeReview> reviews = change.getReviews();
-		List<GerritUser> reviewersWithScore2 = reviews.parallelStream()
-				.filter(review -> review.getReviewScore() == 2)
-				.map(review -> review.getReviewer())
-				.collect(Collectors.toList());
-		if(reviewersWithScore2.size() >= 1) {	
-			return reviewersWithScore2;
-		}
-		else{
-			return reviews.parallelStream()
-					.filter(review -> review.getReviewScore() == 1)
-					.map(review -> review.getReviewer())
-					.collect(Collectors.toList());
-		}
-	}
-
 	private List<GerritUser> getReviewersOfChange(ReviewableChange change) {
 		return change.getReviews().parallelStream()
 					.map(review -> review.getReviewer())
 					.collect(Collectors.toList());
-	}
-	
-	public double calculateMRR(boolean moreFiltered) {
-		double mRR = 0.0;
-		int temp;
-		
-		for (ReviewableChange r: getChanges(moreFiltered)) {
-			temp = rank(candidates(r, moreFiltered, project), r, moreFiltered);
-			if (temp != 0) {
-				mRR +=  (double) 1/temp;
-			}
-	
-		}
-		if(getChanges(moreFiltered).size() > 0) {
-			return mRR / getChanges(moreFiltered).size();
-		}
-		else {
-			return 0;
-		}
-	}
-
-	private int rank(List<GerritUser> candidates, ReviewableChange r, boolean moreFiltered) {
-		int currentRank = 0;
-		List<GerritUser> actualReviewers = getActualReviewers(r);
-		
-		while(currentRank < candidates.size()) {
-			if(actualReviewers.contains(candidates.get(currentRank))) {
-				break;
-			}
-			currentRank++;
-		}
-		return currentRank;
-	}
-
-	public static List<GerritUser> candidates(ReviewableChange r, boolean moreFiltered, Project project) {
-		try {
-		    File resource = getResourceFile(String.format(getRecommendationsFilename(moreFiltered), project.name));
-		    
-			JsonParser parser = Json.createParser(new FileReader(resource));
-		    if(parser.hasNext()) {
-		    	try {
-			    	if (parser.next() == Event.START_ARRAY) {
-			    			List<ReviewRecommendations> recommendations = parser.getArrayStream()
-			    					.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject().getString("review_id"), recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
-			    					.filter(recommendation -> recommendation.getReviewID().equals(r.getId()))
-			    					.collect(Collectors.toList());
-			    			if (recommendations.size() == 1) {
-			    				return recommendations.get(0).getRecommendedReviewers();
-			    			}
-			    			else {
-			    				if (recommendations.size() == 0) {
-			    					System.err.println(String.format("Review with ID %s gave 0 results", r.getId()));
-			    				}
-			    				else {
-			    					System.err.println(String.format("Review with ID %s gave multiple results", r.getId()));
-			    				}
-			    			}
-			    	}
-		    	}
-		    	catch(JsonParsingException e) {
-		    		System.err.println("JSON Parsing error occurred with file: "+resource.getName());
-		    	}
-		    }			
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
-		return Collections.emptyList();
 	}
 }
