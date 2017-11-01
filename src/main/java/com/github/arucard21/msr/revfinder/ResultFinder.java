@@ -91,6 +91,7 @@ public class ResultFinder {
 			for (ReviewRecommendations reviewRecommendations : revFinderEvaluation.getRecommendations(false)) {
 				generator.writeStartObject();
 				generator.write("review_id", reviewRecommendations.getReviewID());
+				generator.write("created", reviewRecommendations.getReviewCreated().toString());
 				generator.writeStartArray("recommended_reviewers");
 
 				if(appendix.equals("AV_binary"))

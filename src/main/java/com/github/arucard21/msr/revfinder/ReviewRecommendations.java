@@ -20,7 +20,10 @@ public class ReviewRecommendations {
 		this.recommendedReviewers = recommendedReviewers;
 	}
 	
-	public ReviewRecommendations(String reviewID, String createdDate, JsonArray recommendedReviewers) {
+	public ReviewRecommendations(JsonObject recommendationJSON) {
+		String reviewID = recommendationJSON.getString("review_id");
+		String createdDate = recommendationJSON.getString("created");
+		JsonArray recommendedReviewers = recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers");
 		this.reviewID = reviewID;
 		this.createdDate = LocalDateTime.parse(createdDate);
 		this.recommendedReviewers = recommendedReviewers.stream()

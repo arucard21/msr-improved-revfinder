@@ -60,6 +60,9 @@ public class GerritUser {
 		this.LCSuffScore = json.getJsonNumber("LCSuffScore").doubleValue();
 		this.LCSubstrScore = json.getJsonNumber("LCSubstrScore").doubleValue();
 		this.LCSubseqScore = json.getJsonNumber("LCSubseqScore").doubleValue();
+		this.AVBinaryScore = json.getJsonNumber("AVBinaryScore").doubleValue();
+		this.AVLogScore = json.getJsonNumber("AVLogScore").doubleValue();
+		this.WLScore = json.getJsonNumber("WLScore").doubleValue();
 	}
 	
 	public int getId() {
@@ -71,7 +74,6 @@ public class GerritUser {
 	}
 	
 	public JsonObject asJsonObject(){
-		try {
 		return Json.createObjectBuilder()
 				.add("_account_id", getId())
 				.add("name", getName())
@@ -83,13 +85,6 @@ public class GerritUser {
 				.add("AVLogScore", getAVLogScore())
 				.add("WLScore", getWLScore())
 				.build();
-	
-		}catch(java.lang.NumberFormatException e) {
-			return Json.createObjectBuilder()
-					.add("_account_id", getId())
-					.add("name", getName())
-					.build();
-		}
 	}
 
 	public double getLCPScore() {

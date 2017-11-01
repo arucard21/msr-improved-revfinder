@@ -3,6 +3,7 @@ package com.github.arucard21.msr.revfinder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -30,9 +31,26 @@ public class RevFinderEvaluation {
 		this.project = project;
 		this.changes = loadChanges("filtered/%s_changes.json", project);
 		this.moreFilteredChanges = loadChanges("filtered/%s_changes_within_period.json", project);
-		this.recommendations = loadRecommendations(false);
-		this.moreFilteredRecommendations = loadRecommendations(true);
+		this.recommendations = loadRecommendations(getResourceFile(String.format(getRecommendationsFilename(false), project.name)));
+		this.moreFilteredRecommendations = loadRecommendations(getResourceFile(String.format(getRecommendationsFilename(true), project.name)));
 	}
+	
+	/**
+	 * Evaluate RevFinder using recommendations from the specified file. Note that when you create
+	 * the object in this way, the "boolean moreFiltered" argument will have no effect. 
+	 * 
+	 * @param project is the name of the project for which we are evaluating RevFinder
+	 * @param recommendationsFile is the name of the JSON file containing the recommendations (can optionally
+	 * contains %s as placeholder for the project name)
+	 */
+	public RevFinderEvaluation(Project project, File recommendationsFile) {
+		this.project = project;
+		this.changes = loadChanges("filtered/%s_changes.json", project);
+		this.moreFilteredChanges = loadChanges("filtered/%s_changes_within_period.json", project);
+		this.recommendations = loadRecommendations(recommendationsFile);
+		this.moreFilteredRecommendations = recommendations;
+	}
+
 
 	public List<ReviewableChange> getChanges(boolean moreFiltered) {
 		return moreFiltered ? moreFilteredChanges : changes;
@@ -62,28 +80,24 @@ public class RevFinderEvaluation {
 		return Collections.emptyList();
 	}
 
-	private List<ReviewRecommendations> loadRecommendations(boolean moreFiltered) {
+	private List<ReviewRecommendations> loadRecommendations(File recommendationsFile) {
 		try {
-		    File resource = getResourceFile(String.format(getRecommendationsFilename(moreFiltered), project.name));
-		    if(!resource.exists()) {
-		    	System.err.printf("Recommendations file %s has not been generated yet\n", resource.getName());
+		    if(!recommendationsFile.exists()) {
+		    	System.err.printf("Recommendations file %s has not been generated yet\n", recommendationsFile.getName());
 		    	return Collections.emptyList();
 		    }
-			JsonParser parser = Json.createParser(new FileReader(resource));
+			JsonParser parser = Json.createParser(new FileReader(recommendationsFile));
 		    if(parser.hasNext()) {
 		    	try {
 			    	if (parser.next() == Event.START_ARRAY) {
 			    		// no parallel() here since it's important to keep the order of the recommendations intact
 			    		return parser.getArrayStream()
-			    				.map(recommendationJSON -> new ReviewRecommendations(
-			    													recommendationJSON.asJsonObject().getString("review_id"),
-			    													recommendationJSON.asJsonObject().getString("created"),
-			    													recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
+			    				.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject()))
 			    				.collect(Collectors.toList());
 			    	}
 		    	}
 		    	catch(JsonParsingException e) {
-		    		System.err.println("JSON Parsing error occurred with file: "+resource.getName());
+		    		System.err.println("JSON Parsing error occurred with file: "+recommendationsFile.getName());
 		    	}
 		    }			
 		} catch (IOException e) {
