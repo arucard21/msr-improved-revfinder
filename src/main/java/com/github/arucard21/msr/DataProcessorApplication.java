@@ -6,62 +6,56 @@ public class DataProcessorApplication {
 
 	public static void main(String[] args) throws IOException {
 		DataProcessor processor = new DataProcessor();
-
-//		System.out.printf("Collected %d changes from Gerrit for Eclipse\n", processor.countChangesForProject(Project.ECLIPSE));
-//		System.out.printf("Collected %d changes from Gerrit for MediaWiki\n", processor.countChangesForProject(Project.MEDIAWIKI));
-//		System.out.printf("Collected %d changes from Gerrit for OpenStack\n", processor.countChangesForProject(Project.OPENSTACK));
-//		System.out.printf("Collected %d changes from Gerrit for Qt\n", processor.countChangesForProject(Project.QT));
-		System.out.println("");
-
-//		processor.filter(Project.ECLIPSE);
-//		processor.filterMore(Project.ECLIPSE);
-		processor.filter(Project.MEDIAWIKI);
-		processor.filterMore(Project.MEDIAWIKI);
-		processor.filter(Project.OPENSTACK);
-		processor.filterMore(Project.OPENSTACK);
-		processor.filter(Project.QT);
-		processor.filterMore(Project.QT);
 		
-//		System.out.printf("Filtered %d changes for Android\n", processor.countFilteredChangesForProject(Project.ECLIPSE));
-		System.out.printf("Filtered %d changes for MediaWiki\n", processor.countFilteredChangesForProject(Project.MEDIAWIKI));
-		System.out.printf("Filtered %d changes for OpenStack\n", processor.countFilteredChangesForProject(Project.OPENSTACK));
-		System.out.printf("Filtered %d changes for Qt\n", processor.countFilteredChangesForProject(Project.QT));
-		System.out.println("");
-//		System.out.printf("Filtered %d changes even more for Eclipse\n", processor.countMoreFilteredChangesForProject(Project.ECLIPSE));
-		System.out.printf("Filtered %d changes even more for MediaWiki\n", processor.countMoreFilteredChangesForProject(Project.MEDIAWIKI));
-		System.out.printf("Filtered %d changes even more for OpenStack\n", processor.countMoreFilteredChangesForProject(Project.OPENSTACK));
-		System.out.printf("Filtered %d changes even more for Qt\n", processor.countMoreFilteredChangesForProject(Project.QT));
-		System.out.println("");
-
-//		System.out.printf("Average number of reviewers per change for Eclipse: %f\n", processor.averageNumberOfReviewers(Project.ECLIPSE));
-		System.out.printf("Average number of reviewers per change for MediaWiki: %f\n", processor.averageNumberOfReviewers(Project.MEDIAWIKI));
-		System.out.printf("Average number of reviewers per change for OpenStack: %f\n", processor.averageNumberOfReviewers(Project.OPENSTACK));
-		System.out.printf("Average number of reviewers per change for Qt: %f\n", processor.averageNumberOfReviewers(Project.QT));
-		System.out.println("");
-//		System.out.printf("Average number of reviewers per change (more filtered) for Eclipse: %f\n", processor.averageNumberOfReviewersForMoreFilteredData(Project.ECLIPSE));
-		System.out.printf("Average number of reviewers per change (more filtered) for MediaWiki: %f\n", processor.averageNumberOfReviewersForMoreFilteredData(Project.MEDIAWIKI));
-		System.out.printf("Average number of reviewers per change (more filtered) for OpenStack: %f\n", processor.averageNumberOfReviewersForMoreFilteredData(Project.OPENSTACK));
-		System.out.printf("Average number of reviewers per change (more filtered) for Qt: %f\n", processor.averageNumberOfReviewersForMoreFilteredData(Project.QT));
+		for (Project project : Project.values()) {
+			new Thread(() -> {
+			System.out.printf("Collected %d changes from Gerrit for %s\n", processor.countChangesForProject(project), project.name);
+			try {
+				processor.filter(project);
+				processor.filterMore(project);
+			} catch (IOException e) {
+				System.err.printf("IOException with project %s", project.name);
+				e.printStackTrace();
+			}
+			System.out.printf("Filtered %d changes for %s\n", processor.countFilteredChangesForProject(project), project.name);
+			System.out.printf("Filtered %d changes even more for %s\n", processor.countMoreFilteredChangesForProject(project), project.name);
+			System.out.printf("Average number of reviewers per change for %s: %f\n", project.name, processor.averageNumberOfReviewers(project));
+			System.out.printf("Average number of reviewers per change (more filtered) for %s: %f\n", project.name, processor.averageNumberOfReviewersForMoreFilteredData(project));
+			}).start();
+			
+		}
 	}
 	/*
-	Collected 374874 changes from Gerrit for MediaWiki
-	Collected 496568 changes from Gerrit for OpenStack
-	Collected 181337 changes from Gerrit for Qt
+Collected 99611 changes from Gerrit for eclipse
+Wrote new filtered data for eclipse
+Wrote new, even more filtered data for eclipse
+Filtered 4467 changes for eclipse
+Filtered 1842 changes even more for eclipse
+Average number of reviewers per change for eclipse: 1.009178
+Average number of reviewers per change (more filtered) for eclipse: 1.004343
 
-	Filtered 5590 changes for MediaWiki
-	Filtered 5128 changes for OpenStack
-	Filtered 22464 changes for Qt
-	
-	Filtered 5445 changes even more for MediaWiki
-	Filtered 4988 changes even more for OpenStack
-	Filtered 21851 changes even more for Qt
-	
-	Average number of reviewers per change for MediaWiki: 1.003220
-	Average number of reviewers per change for OpenStack: 1.422582
-	Average number of reviewers per change for Qt: 1.040598
-	
-	Average number of reviewers per change (more filtered) for MediaWiki: 1.004408
-	Average number of reviewers per change (more filtered) for OpenStack: 1.419407
-	Average number of reviewers per change (more filtered) for Qt: 1.042149
+Collected 374874 changes from Gerrit for mediawiki
+Wrote new filtered data for mediawiki
+Wrote new, even more filtered data for mediawiki
+Filtered 5590 changes for mediawiki
+Filtered 5445 changes even more for mediawiki
+Average number of reviewers per change for mediawiki: 1.007692
+Average number of reviewers per change (more filtered) for mediawiki: 1.007530
+
+Collected 496568 changes from Gerrit for openstack
+Wrote new filtered data for openstack
+Wrote new, even more filtered data for openstack
+Filtered 5128 changes for openstack
+Filtered 4988 changes even more for openstack
+Average number of reviewers per change for openstack: 1.453783
+Average number of reviewers per change (more filtered) for openstack: 1.450682
+
+Collected 181337 changes from Gerrit for qt
+Wrote new filtered data for qt
+Wrote new, even more filtered data for qt
+Filtered 22464 changes for qt
+Filtered 21851 changes even more for qt
+Average number of reviewers per change for qt: 1.066907
+Average number of reviewers per change (more filtered) for qt: 1.066084
 	 */
 }

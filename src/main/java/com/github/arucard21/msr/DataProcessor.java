@@ -197,7 +197,7 @@ public class DataProcessor {
 			    					.map(reviewsForChange -> {
 			    						long reviewersWith2 = reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count();
 			    						if(reviewersWith2 == 0) {
-			    							return reviewsForChange.stream().filter(review -> review.getReviewScore() == 2).count();
+			    							return reviewsForChange.stream().filter(review -> review.getReviewScore() == 1).count();
 			    						}
 			    						else{
 			    							return reviewersWith2;
