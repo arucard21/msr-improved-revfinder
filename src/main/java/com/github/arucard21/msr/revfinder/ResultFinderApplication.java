@@ -10,7 +10,7 @@ public class ResultFinderApplication {
 
 	public static void main(String[] args) throws Exception {
 
-		Project project = Project.OPENSTACK;
+		Project project = Project.MEDIAWIKI;
 		ResultFinder resultFinder = new ResultFinder(project);
 		//print(project.name + " top-k (10) accuracy = " + resultFinder.calculateTopKAccuracy(10, false, false));
 		//print(project.name + " ... with binary AV  = " + resultFinder.calculateTopKAccuracyBinaryAvailability(10));
@@ -26,10 +26,10 @@ public class ResultFinderApplication {
 		// openstack ... with log AV (0.4)  = 18.702442931517822
 
 		print(dtf.format(LocalDateTime.now()));
-		resultFinder.generateRecommendations("AV_binary", 0, false);
+		resultFinder.generateRecommendations("AV_binary", 0, true);
 
-		print(dtf.format(LocalDateTime.now()));
-		resultFinder.generateRecommendations("AV_log_false", 0.0, false);
+//		print(dtf.format(LocalDateTime.now()));
+//		resultFinder.generateRecommendations("AV_log_false", 0.0, false);
 
 		print(dtf.format(LocalDateTime.now()));
 		resultFinder.generateRecommendations("AV_log_10_true", 0.1, true);
@@ -46,8 +46,8 @@ public class ResultFinderApplication {
 		print(dtf.format(LocalDateTime.now()));
 		resultFinder.generateRecommendations("AV_log_80_true", 0.8, true);
 
-		print(dtf.format(LocalDateTime.now()));
-		resultFinder.generateRecommendations("WL_false", 0.0, false);
+//		print(dtf.format(LocalDateTime.now()));
+//		resultFinder.generateRecommendations("WL_false", 0.0, false);
 
 		print(dtf.format(LocalDateTime.now()));
 		resultFinder.generateRecommendations("WL_80_true", 0.8, true);

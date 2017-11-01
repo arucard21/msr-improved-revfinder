@@ -7,7 +7,8 @@ import com.github.arucard21.msr.Project;
 
 public class RevFinderEvaluationApplication {
 	public static void main(String[] args) {
-		for (Project project : Project.values()) {
+//		for (Project project : Project.values()) {
+		Project project = Project.MEDIAWIKI;
 			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
 			RevFinderEvaluation revFinderEvaluation = new RevFinderEvaluation(project);
 			List<Integer> valuesForK = Arrays.asList(1,3,5,10);
@@ -20,24 +21,17 @@ public class RevFinderEvaluationApplication {
 				System.out.printf("[%s within-period] top-k accuracies for each k = \n%s\n", project.name, revFinderEvaluation.calculateTopKAccuracy(valuesForK, true));
 				System.out.printf("[%s within-period] MRR = %f\n", project.name, revFinderEvaluation.calculateMRR(true));
 			}).start();
-		}
+//		}
 
 		/*
-		Generated recommended reviewers for openstack
-		Generated recommended reviewers for openstack
-		Results for data filtered only on created date:
-		openstack top-k accuracy for first = 75.65078093712455
-		openstack top-k accuracy for last = 72.4669603524229
-		openstack MRR for first = 0.41792055228178493
-		openstack MRR for last = 0.3955286820374921
-		openstack average number of files = 15.713656387665198
+
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
+[mediawiki within-period] top-k accuracies for each k = 
+{1=37.33700642791552, 3=65.58310376492194, 5=78.49403122130394, 10=91.643709825528}
+[mediawiki based-on-created] MRR = 0.299320
+[mediawiki within-period] MRR = 0.298570
 		
-		Results for more filtered data:
-		openstack top-k accuracy for first = 75.3808151502676
-		openstack top-k accuracy for last = 72.16961712638945
-		openstack MRR for first = 0.41646988766688103
-		openstack MRR for last = 0.394677164814052
-		openstack average number of files = 15.248867846850557
 		 */
 	}
 }
