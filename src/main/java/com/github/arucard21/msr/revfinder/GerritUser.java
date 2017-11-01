@@ -56,6 +56,10 @@ public class GerritUser {
 			this.id = json.getInt("id", -1);
 		}
 		this.name = json.getString("name", "");
+		this.LCPScore = json.getJsonNumber("LCPScore").doubleValue();
+		this.LCSuffScore = json.getJsonNumber("LCSuffScore").doubleValue();
+		this.LCSubstrScore = json.getJsonNumber("LCSubstrScore").doubleValue();
+		this.LCSubseqScore = json.getJsonNumber("LCSubseqScore").doubleValue();
 	}
 	
 	public int getId() {
