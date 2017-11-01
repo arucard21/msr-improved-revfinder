@@ -1,5 +1,8 @@
 package com.github.arucard21.msr.revfinder;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.github.arucard21.msr.Project;
 
 public class RevFinderApplication {
@@ -7,14 +10,13 @@ public class RevFinderApplication {
 		for (Project project : Project.values()) {
 			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
 			RevFinder revFinder = new RevFinder(project );
+			List<Integer> valuesForK = Arrays.asList(1,3,5,10);
 			new Thread(() -> {
 				System.out.printf("[%s based-on-created] Generating recommendations\n", project.name);
 				revFinder.generateReviewerRecommendations(false);
 				System.out.printf("[%s based-on-created] Finished generating recommendations\n", project.name);
-				System.out.printf("[%s based-on-created] top-k accuracy for first = %f\n", project.name, revFinder.calculateTopKAccuracy(10, false, false));
-				System.out.printf("[%s based-on-created] top-k accuracy for last = %f\n", project.name, revFinder.calculateTopKAccuracy(10, true, false));
-				System.out.printf("[%s based-on-created] MRR for first = %f\n", project.name, revFinder.calculateMRR(false, false));
-				System.out.printf("[%s based-on-created] MRR for last = %f\n", project.name, revFinder.calculateMRR(true, false));
+				System.out.printf("[%s based-on-created] top-k accuracies for each k = \n%s\n", project.name, revFinder.calculateTopKAccuracy(valuesForK, false));
+				System.out.printf("[%s based-on-created] MRR = %f\n", project.name, revFinder.calculateMRR(false));
 				System.out.printf("[%s based-on-created] average number of files = %f\n", project.name, revFinder.getAverageNumberFiles(false));
 			}).start();
 			
@@ -22,10 +24,8 @@ public class RevFinderApplication {
 				System.out.printf("[%s within-period] Generating recommendations\n", project.name);
 				revFinder.generateReviewerRecommendations(true);
 				System.out.printf("[%s within-period] Finished generating recommendations\n", project.name);
-				System.out.printf("[%s within-period] top-k accuracy for first = %f\n", project.name, revFinder.calculateTopKAccuracy(10, false, true));
-				System.out.printf("[%s within-period] top-k accuracy for last = %f\n", project.name, revFinder.calculateTopKAccuracy(10, true, true));
-				System.out.printf("[%s within-period] MRR for first = %f\n", project.name, revFinder.calculateMRR(false, true));
-				System.out.printf("[%s within-period] MRR for last = %f\n", project.name, revFinder.calculateMRR(true, true));
+				System.out.printf("[%s within-period] top-k accuracies for each k = \n%s\n", project.name, revFinder.calculateTopKAccuracy(valuesForK, true));
+				System.out.printf("[%s within-period] MRR = %f\n", project.name, revFinder.calculateMRR(true));
 				System.out.printf("[%s within-period] average number of files = %f\n", project.name, revFinder.getAverageNumberFiles(true));
 			}).start();
 		}

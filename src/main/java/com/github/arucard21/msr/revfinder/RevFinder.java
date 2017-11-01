@@ -14,7 +14,6 @@ import javax.json.stream.JsonParser.Event;
 import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.Project;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.io.File;
@@ -214,38 +213,50 @@ public class RevFinder {
 				.collect(Collectors.toList());
 	}
 	
-	public double calculateTopKAccuracy(int topK, boolean last, boolean moreFiltered) {
-		double topKAccuracy = 0.0;
+	public Map<Integer, Double> calculateTopKAccuracy(List<Integer> valuesForK, boolean moreFiltered) {
+		Map<Integer, Double> topKAccuracies = new HashMap<>();
+		//ensure that the accuracy for each K is never null
+		for (Integer valueForK : valuesForK) {
+			topKAccuracies.put(valueForK, 0.0);
+		}
 		
 		for (ReviewableChange r: getChanges(moreFiltered)) {
-			topKAccuracy += isCorrect(r, topK, last,moreFiltered);
-		}
-		if(getChanges(moreFiltered).size() > 0) {
-			return  topKAccuracy * 100 / getChanges(moreFiltered).size();
-		}
-		else {			
-			return 0;
-		}
-	}
-
-	private double isCorrect(ReviewableChange change, int topK, boolean last, boolean moreFiltered) {
-		List<GerritUser> topKReviewers = candidates(change, moreFiltered, project);
-		//GerritUser actualReviewer = getFirst(change, last);
-		//if(actualReviewer == null) {
-			//return 0.0;
-		//}
-		List<GerritUser> actualReviewers = getActualReviewers(change);
-		
-		if (topKReviewers.size() > topK) {
-			topKReviewers = topKReviewers.subList(0, topK-1);
-		}
-		
-		for(GerritUser topKReviewer: topKReviewers) {
-			if (actualReviewers.contains(topKReviewer)) {
-				return 1.0;
+			Map<Integer, Boolean> correctPerK = isCorrect(r, valuesForK, moreFiltered);
+			for (Integer valueForK : valuesForK) {
+				topKAccuracies.put(valueForK, topKAccuracies.get(valueForK) + (correctPerK.get(valueForK) ? 1.0 : 0.0));
 			}
 		}
-		return 0.0;
+		if(getChanges(moreFiltered).size() > 0) {
+			for (Integer valueForK : valuesForK) {
+				topKAccuracies.put(valueForK, ((topKAccuracies.get(valueForK) * 100) / getChanges(moreFiltered).size()));
+			}
+		}
+		return topKAccuracies;
+	}
+
+	private Map<Integer, Boolean> isCorrect(ReviewableChange change, List<Integer> valuesForK, boolean moreFiltered) {
+		List<GerritUser> topKReviewers = candidates(change, moreFiltered, project);
+		List<GerritUser> actualReviewers = getActualReviewers(change);
+		Map<Integer, Boolean> correctPerK = new HashMap<>();
+		
+		for(int i = 0; i < topKReviewers.size(); i++) {
+			GerritUser topKReviewer = topKReviewers.get(i); 
+			if (actualReviewers.contains(topKReviewer)) {
+				for (Integer valueForK : valuesForK) {
+					if (i < valueForK) {
+						correctPerK.put(valueForK, true);
+						break;
+					}
+				}
+			}
+		}
+		// make sure every k has a value
+		for(Integer valueForK : valuesForK) {
+			if (correctPerK.get(valueForK) == null) {
+				correctPerK.put(valueForK, false);
+			}
+		}
+		return correctPerK;
 	}
 
 	private List<GerritUser> getActualReviewers(ReviewableChange change) {
@@ -264,36 +275,6 @@ public class RevFinder {
 					.collect(Collectors.toList());
 		}
 	}
-	
-	private GerritUser getFirstNonBotMessage(ReviewableChange change, boolean last) {
-		List<GerritUser> bots = new ArrayList<>();
-		bots.add(new GerritUser(3,"Jenkins"));
-		bots.add(new GerritUser(9,"LaunchpadSync"));
-		bots.add(new GerritUser(2166,"SmokeStack CI"));
-		bots.add(new GerritUser(5494,"Trivial Rebase"));
-		bots.add(new GerritUser(8871,"Elastic Recheck"));
-		
-		List<GerritUser> first = change.getMessages().parallelStream()
-				.filter(message -> !bots.contains(message.getAuthor()))
-				.map(message -> message.getAuthor())
-				.collect(Collectors.toList());
-		if (first.size() != 0) {
-			return first.get(0);
-		}else {
-			return null;
-		}
-	}
-	
-	private GerritUser getChronologically(List<GerritUser> reviewersWithScore2, ReviewableChange change, boolean last) {
-		List<Message> reviewerMessages = change.getMessages().parallelStream()
-				.filter(message -> reviewersWithScore2.contains(message.getAuthor()))
-				.collect(Collectors.toList());
-		Collections.sort(reviewerMessages, (message1, message2) -> (message1.getDate().compareTo(message2.getDate())));
-		if (last) {
-			Collections.reverse(reviewerMessages);
-		}
-		return reviewerMessages.get(0).getAuthor();
-	}
 
 	private List<GerritUser> getReviewersOfChange(ReviewableChange change) {
 		return change.getReviews().parallelStream()
@@ -301,12 +282,12 @@ public class RevFinder {
 					.collect(Collectors.toList());
 	}
 	
-	public double calculateMRR(boolean last, boolean moreFiltered) {
+	public double calculateMRR(boolean moreFiltered) {
 		double mRR = 0.0;
 		int temp;
 		
 		for (ReviewableChange r: getChanges(moreFiltered)) {
-			temp = rank(candidates(r, moreFiltered, project), r, last, moreFiltered);
+			temp = rank(candidates(r, moreFiltered, project), r, moreFiltered);
 			if (temp != 0) {
 				mRR +=  (double) 1/temp;
 			}
@@ -320,31 +301,17 @@ public class RevFinder {
 		}
 	}
 
-	private int rank(List<GerritUser> candidates, ReviewableChange r, boolean last, boolean moreFiltered) {
-		int lowestRank = -1;
-		//GerritUser actualReviewer = getFirst(r, last);
-		//if(actualReviewer == null) {
-			//return 0;
-		//}
+	private int rank(List<GerritUser> candidates, ReviewableChange r, boolean moreFiltered) {
+		int currentRank = 0;
 		List<GerritUser> actualReviewers = getActualReviewers(r);
 		
-		for (int i = 0; i < candidates.size(); i++) {
-			if(actualReviewers.contains(candidates.get(i))) {
-				if(lowestRank == -1) {
-					lowestRank = i;
-				}
-				else {
-					if(i < lowestRank) {
-						lowestRank = i;
-					}
-				}					
+		while(currentRank < candidates.size()) {
+			if(actualReviewers.contains(candidates.get(currentRank))) {
+				break;
 			}
+			currentRank++;
 		}
-		
-		if (lowestRank == -1) {
-			return 0;
-		}
-		return lowestRank;
+		return currentRank;
 	}
 
 	public static List<GerritUser> candidates(ReviewableChange r, boolean moreFiltered, Project project) {
