@@ -11,7 +11,7 @@ public class WorkloadCheckerApp {
 
         String day = "2011-11-04";
         int revID = 5638;
-        float revWorkload = WlChecker.getReviewerWorkloadByDay(revID, day);
+        float revWorkload = WlChecker.getReviewerWorkloadByDay(day, revID);
 
         System.out.println("workload at " + day + " for " + revID + " = " + revWorkload);
     }
