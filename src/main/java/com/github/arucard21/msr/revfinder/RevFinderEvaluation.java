@@ -129,9 +129,9 @@ public class RevFinderEvaluation {
 				for (Integer valueForK : valuesForK) {
 					if (i < valueForK) {
 						correctPerK.put(valueForK, true);
-						break;
 					}
 				}
+				break;
 			}
 		}
 		// make sure every k has a value
