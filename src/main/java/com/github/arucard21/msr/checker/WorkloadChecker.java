@@ -391,7 +391,7 @@ public class WorkloadChecker {
         return avgWorkload;
     }
 
-    public float getReviewerWorkloadByDay(int revID, String day) {
+    public float getReviewerWorkloadByDay(String day, int revID) {
         if(! dayToWorkloadNormalized.containsKey(day))
             return 0;
 

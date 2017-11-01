@@ -4,21 +4,15 @@ package com.github.arucard21.msr.revfinder;
 import com.github.arucard21.msr.Project;
 import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.checker.AvailabilityChecker;
-import org.json.simple.parser.ParseException;
+import com.github.arucard21.msr.checker.WorkloadChecker;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
-import javax.json.stream.JsonParser;
-import javax.json.stream.JsonParser.Event;
-import javax.json.stream.JsonParsingException;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.github.arucard21.msr.revfinder.RevFinder.getRankedReviewerList;
 
 
 public class ResultFinder {
@@ -26,12 +20,16 @@ public class ResultFinder {
 	private List<ReviewableChange> changes;
 	//private List<ReviewableChange> moreFilteredChanges;
 	private AvailabilityChecker AvChecker;
+	private WorkloadChecker WlChecker;
 
-	public ResultFinder(Project project) throws IOException, ParseException {
+	public ResultFinder(Project project) throws Exception {
 		this.project = project;
 
 		AvChecker = new AvailabilityChecker();
 		AvChecker.check(project);
+
+		WlChecker = new WorkloadChecker();
+		WlChecker.check(project);
 
 		changes = RevFinder.loadChanges("filtered/%s_changes.json", project);
 	}
@@ -45,15 +43,65 @@ public class ResultFinder {
 		{
 			double filepathScore = candidate.getCombinedFilepathScore();
 			int availability = AvChecker.checkBinaryAvailabilityByDateString(dateString, candidate.getId());
-			candidate.setAVBinaryScore(filepathScore * availability);
 
+			if(availability == 0)
+				continue;
+
+			candidate.setAVBinaryScore(filepathScore * availability);
 			ranking.put(candidate, candidate.getAVBinaryScore());
 		}
 
-		return getRankedReviewerList(ranking);
+		return getRankedReviewerListDescending(ranking);
 	}
 
-	public static List<GerritUser> getRankedReviewerList(Map<GerritUser, Double> candidates) {
+	private List<GerritUser> calcLogAVRecommendation(ReviewableChange change, double threshold, boolean removeUnderThreshold) {
+		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
+		Map<GerritUser, Double> ranking = new HashMap<>();
+		String dateString = change.getCreated().toString().substring(0, 10);
+
+		for(GerritUser candidate : candidates)
+		{
+			double filepathScore = candidate.getCombinedFilepathScore();
+			double availability = AvChecker.checkLogAvailabilityByDateString(dateString, candidate.getId());
+
+			if(availability == 0)
+				continue;
+
+			if(removeUnderThreshold && threshold > availability)
+				continue;
+
+			candidate.setAVLogScore(filepathScore * availability);
+			ranking.put(candidate, candidate.getAVLogScore());
+		}
+
+		return getRankedReviewerListDescending(ranking);
+	}
+
+	private List<GerritUser> calcWLRecommendation(ReviewableChange change, double maximum, boolean removeOverMaximum) {
+		List<GerritUser> candidates = RevFinder.candidates(change, false, project);
+		Map<GerritUser, Double> ranking = new HashMap<>();
+		String dateString = change.getCreated().toString().substring(0, 10);
+
+		for(GerritUser candidate : candidates)
+		{
+			double filepathScore = candidate.getCombinedFilepathScore();
+			double workload = WlChecker.getReviewerWorkloadByDay(dateString, candidate.getId());
+
+			if(workload == 0)
+				continue;
+
+			if(removeOverMaximum && workload > maximum)
+				continue;
+
+			candidate.setWLScore(filepathScore * workload);
+			ranking.put(candidate, candidate.getWLScore());
+		}
+
+		// TODO sort ascending!
+		return getRankedReviewerListDescending(ranking);
+	}
+
+	public static List<GerritUser> getRankedReviewerListDescending(Map<GerritUser, Double> candidates) {
 		List<GerritUser> tempList = candidates.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
@@ -67,12 +115,14 @@ public class ResultFinder {
 		}
 	}
 
-	public void generateRecommendations(String appendix){
+	public void generateRecommendations(String appendix, double threshold, boolean removeUnderThreshold){
+		System.out.println("[" + project.name + "] Generating: " + appendix);
 		HashMap<String, Object> config = new HashMap<>();
 		config.put(JsonGenerator.PRETTY_PRINTING, true);
 		File outputFile = getResourceFile(String.format(getRecommendationsFilename(appendix), project.name));
+
 		if (outputFile.exists()) {
-			System.out.println("OUTPUT FILE EXISTS");
+			System.out.println("--> " + appendix + " already generated");
 			return;
 		}
 		try {
@@ -88,6 +138,20 @@ public class ResultFinder {
 				if(appendix.equals("AV_binary"))
 				{
 					calcBinaryAVRecommendation(change)
+							.stream()
+							.map(reviewer -> reviewer.asJsonObject())
+							.forEach(generator::write);
+				}
+				else if(appendix.contains("AV_log"))
+				{
+					calcLogAVRecommendation(change, threshold, removeUnderThreshold)
+							.stream()
+							.map(reviewer -> reviewer.asJsonObject())
+							.forEach(generator::write);
+				}
+				else if(appendix.contains("WL_"))
+				{
+					calcWLRecommendation(change, threshold, removeUnderThreshold)
 							.stream()
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);

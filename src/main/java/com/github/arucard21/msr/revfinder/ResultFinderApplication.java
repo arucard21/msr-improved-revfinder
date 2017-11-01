@@ -11,22 +11,15 @@ public class ResultFinderApplication {
 
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
-	public static void main(String[] args) throws IOException, ParseException {
+	public static void main(String[] args) throws Exception {
 
 		Project project = Project.OPENSTACK;
 		ResultFinder resultFinder = new ResultFinder(project);
-		print("Results for data filtered only on created date:");
 		//print(project.name + " top-k (10) accuracy = " + resultFinder.calculateTopKAccuracy(10, false, false));
-
-		print(dtf.format(LocalDateTime.now()));
 		//print(project.name + " ... with binary AV  = " + resultFinder.calculateTopKAccuracyBinaryAvailability(10));
-		print(dtf.format(LocalDateTime.now()));
 		//print(project.name + " ... with log AV (0.1)  = " + resultFinder.calculateTopKAccuracyLogAvailability(10, 0.1));
-		print(dtf.format(LocalDateTime.now()));
 		//print(project.name + " ... with log AV (0.2)  = " + resultFinder.calculateTopKAccuracyLogAvailability(10, 0.2));
-		print(dtf.format(LocalDateTime.now()));
 		//print(project.name + " ... with log AV (0.3)  = " + resultFinder.calculateTopKAccuracyLogAvailability(10, 0.3));
-		print(dtf.format(LocalDateTime.now()));
 
 		// openstack top-k (10) accuracy = 75.65078093712455
 		// openstack ... with binary AV  = 72.62715258309971
@@ -35,8 +28,38 @@ public class ResultFinderApplication {
 		// openstack ... with log AV (0.3)  = 42.49098918702443
 		// openstack ... with log AV (0.4)  = 18.702442931517822
 
-		resultFinder.generateRecommendations("AV_binary");
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_binary", 0, false);
 
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_false", 0.0, false);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_10_true", 0.1, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_20_true", 0.2, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_40_true", 0.4, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_60_true", 0.6, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("AV_log_80_true", 0.8, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("WL_false", 0.0, false);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("WL_80_true", 0.8, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("WL_90_true", 0.9, true);
+
+		print(dtf.format(LocalDateTime.now()));
+		resultFinder.generateRecommendations("WL_95_true", 0.95, true);
 	}
 
 	static void print(String str) {

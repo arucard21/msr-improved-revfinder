@@ -33,6 +33,8 @@ public class GerritUser {
 	private double LCSubseqScore;
 	private double LCSubstrScore;
 	private double AVBinaryScore;
+	private double AVLogScore;
+	private double WLScore;
 	
 	public GerritUser(int id, String name) {
 		this.id = id;
@@ -41,7 +43,8 @@ public class GerritUser {
 		setLCSuffScore(0.0);
 		setLCSubseqScore(0.0);
 		setLCSubstrScore(0.0);
-
+		setAVBinaryScore(0.0);
+		setAVLogScore(0.0);
 	}
 
 	public GerritUser(JsonObject json) {
@@ -73,6 +76,8 @@ public class GerritUser {
 				.add("LCSubstrScore", getLCSubstrScore())
 				.add("LCSubseqScore", getLCSubseqScore())
 				.add("AVBinaryScore", getAVBinaryScore())
+				.add("AVLogScore", getAVLogScore())
+				.add("WLScore", getWLScore())
 				.build();
 	
 		}catch(java.lang.NumberFormatException e) {
@@ -126,4 +131,20 @@ public class GerritUser {
 
 	// TODO COMbINE
 	public double getCombinedFilepathScore() { return 1.0; }
+
+	public void setAVLogScore(double AVLogScore) {
+		this.AVLogScore = AVLogScore;
+	}
+
+	public double getAVLogScore() {
+		return AVLogScore;
+	}
+
+	public void setWLScore(double WLScore) {
+		this.WLScore = WLScore;
+	}
+
+	public double getWLScore() {
+		return WLScore;
+	}
 }
