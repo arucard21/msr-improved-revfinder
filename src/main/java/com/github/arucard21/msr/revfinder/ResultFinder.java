@@ -2,7 +2,6 @@ package com.github.arucard21.msr.revfinder;
 
 
 import com.github.arucard21.msr.Project;
-import com.github.arucard21.msr.ReviewableChange;
 import com.github.arucard21.msr.checker.AvailabilityChecker;
 import com.github.arucard21.msr.checker.WorkloadChecker;
 
@@ -12,7 +11,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class ResultFinder {
@@ -35,16 +33,8 @@ public class ResultFinder {
 
 	private List<GerritUser> calcBinaryAVRecommendation(ReviewRecommendations reviewRecommendations) {
 		List<GerritUser> availableReviewers = new ArrayList<>();
-		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
-				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
-				.collect(Collectors.toList());
-		if(changes.size() == 0) {
-			System.err.println("Multiple changes with same ID found");
-		}
-		ReviewableChange change = changes.get(0);
-		String dateString = change.getCreated().toString().substring(0, 10);
+		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
 
-		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			boolean available = AvChecker.checkBinaryAvailabilityByDateString(dateString, recommendedReviewer.getId());
@@ -57,15 +47,7 @@ public class ResultFinder {
 
 	private List<GerritUser> calcLogAVRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeUnderThreshold) {
 		List<GerritUser> availableReviewers = new ArrayList<>();
-		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
-				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
-				.collect(Collectors.toList());
-		if(changes.size() == 0) {
-			System.err.println("Multiple changes with same ID found");
-		}
-		ReviewableChange change = changes.get(0);
-		String dateString = change.getCreated().toString().substring(0, 10);
-
+		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
 		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
@@ -79,16 +61,8 @@ public class ResultFinder {
 
 	private List<GerritUser> calcWLRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeOverThreshold) {
 		List<GerritUser> availableReviewers = new ArrayList<>();
-		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
-				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
-				.collect(Collectors.toList());
-		if(changes.size() == 0) {
-			System.err.println("Multiple changes with same ID found");
-		}
-		ReviewableChange change = changes.get(0);
-		String dateString = change.getCreated().toString().substring(0, 10);
+		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
 
-		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());

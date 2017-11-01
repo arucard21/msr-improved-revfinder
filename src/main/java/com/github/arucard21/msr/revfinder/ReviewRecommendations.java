@@ -1,5 +1,6 @@
 package com.github.arucard21.msr.revfinder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,15 +11,18 @@ import javax.json.JsonObjectBuilder;
 
 public class ReviewRecommendations {
 	private final String reviewID;
+	private final LocalDateTime createdDate;
 	private final List<GerritUser> recommendedReviewers;
 	
-	public ReviewRecommendations(String reviewID, List<GerritUser> recommendedReviewers) {
+	public ReviewRecommendations(String reviewID, String createdDate, List<GerritUser> recommendedReviewers) {
 		this.reviewID = reviewID;
+		this.createdDate = LocalDateTime.parse(createdDate);
 		this.recommendedReviewers = recommendedReviewers;
 	}
 	
-	public ReviewRecommendations(String reviewID, JsonArray recommendedReviewers) {
+	public ReviewRecommendations(String reviewID, String createdDate, JsonArray recommendedReviewers) {
 		this.reviewID = reviewID;
+		this.createdDate = LocalDateTime.parse(createdDate);
 		this.recommendedReviewers = recommendedReviewers.stream()
 				.map((reviewer) -> new GerritUser(reviewer.asJsonObject()))
 				.collect(Collectors.toList());
@@ -27,6 +31,10 @@ public class ReviewRecommendations {
 	public String getReviewID() {
 		return reviewID;
 	}
+	
+	public LocalDateTime getReviewCreated() {
+		return createdDate;
+	}
 
 	public List<GerritUser> getRecommendedReviewers() {
 		return recommendedReviewers;
@@ -34,7 +42,8 @@ public class ReviewRecommendations {
 
 	public JsonObject asJsonObject(){
 		JsonObjectBuilder builder = Json.createObjectBuilder()
-				.add("review_id", getReviewID());
+				.add("review_id", getReviewID())
+				.add("created", getReviewCreated().toString());
 		for (GerritUser recommended: getRecommendedReviewers()) {
 			builder.add("recommended_reviewers", recommended.asJsonObject());
 		}

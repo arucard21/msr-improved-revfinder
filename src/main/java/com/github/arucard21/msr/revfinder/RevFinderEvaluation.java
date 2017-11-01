@@ -75,7 +75,10 @@ public class RevFinderEvaluation {
 			    	if (parser.next() == Event.START_ARRAY) {
 			    		// no parallel() here since it's important to keep the order of the recommendations intact
 			    		return parser.getArrayStream()
-			    				.map(recommendationJSON -> new ReviewRecommendations(recommendationJSON.asJsonObject().getString("review_id"), recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
+			    				.map(recommendationJSON -> new ReviewRecommendations(
+			    													recommendationJSON.asJsonObject().getString("review_id"),
+			    													recommendationJSON.asJsonObject().getString("created"),
+			    													recommendationJSON.asJsonObject().getJsonArray("recommended_reviewers")))
 			    				.collect(Collectors.toList());
 			    	}
 		    	}

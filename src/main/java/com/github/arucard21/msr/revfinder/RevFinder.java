@@ -65,7 +65,7 @@ public class RevFinder {
 		return average.isPresent() ? average.getAsDouble() : 0.0;
 	}
 
-	public List<GerritUser> generateReviewerRecommendations(ReviewableChange change, boolean moreFiltered){
+	private List<GerritUser> generateReviewerRecommendations(ReviewableChange change, boolean moreFiltered){
 		List<ReviewableChange> pastChanges = getPastReviews(change, moreFiltered);
 		Collections.sort(pastChanges, (change1, change2) -> (change1.getCreated().compareTo(change2.getCreated())));
 		Map<GerritUser, Double> reviewersWithRecommendationScore;
@@ -135,17 +135,12 @@ public class RevFinder {
 	}
 
 	private List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
-		List<GerritUser> tempList = combinedReviewersRecommendationRank.entrySet().stream()
+		List<GerritUser> rankedReviewersByScore = combinedReviewersRecommendationRank.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue())
 				.map(Map.Entry::getKey)
 				.collect(Collectors.toList());
-		Collections.reverse(tempList);
-		if (tempList.size() > 9) {
-			return tempList.subList(0, 9);
-		}
-		else {
-			return tempList.subList(0, tempList.size());
-		}
+		Collections.reverse(rankedReviewersByScore); // ensure high score is ranked first
+		return rankedReviewersByScore;
 	}
 
 	public void generateReviewerRecommendations(boolean moreFiltered){
@@ -163,6 +158,7 @@ public class RevFinder {
 	    	for (ReviewableChange change : getChanges(moreFiltered)) {
 	    		generator.writeStartObject();
 	    		generator.write("review_id", change.getId());
+	    		generator.write("created", change.getCreated().toString());
 	    		generator.writeStartArray("recommended_reviewers");
 	    		generateReviewerRecommendations(change, moreFiltered)
 	    				.stream()
