@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class ResultFinder {
@@ -38,6 +39,7 @@ public class ResultFinder {
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			boolean available = AvChecker.checkBinaryAvailabilityByDateString(dateString, recommendedReviewer.getId());
+			recommendedReviewer.setAVBinaryScore(available ? 1.0 : 0.0);
 			if(available) {
 				availableReviewers.add(recommendedReviewer);				
 			}
@@ -48,31 +50,138 @@ public class ResultFinder {
 	private List<GerritUser> calcLogAVRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeUnderThreshold) {
 		List<GerritUser> availableReviewers = new ArrayList<>();
 		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
+		Map<GerritUser,Double> lCPScores = new HashMap<>();
+		Map<GerritUser,Double> lCSuffScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubstrScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubseqScores = new HashMap<>();
+		List<Map<GerritUser,Double>> allScores = new ArrayList<>();
+ 		
 		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			float availableLikelihood = AvChecker.checkLogAvailabilityByDateString(dateString, recommendedReviewer.getId());
-			if(removeUnderThreshold && availableLikelihood > threshold) {
-				availableReviewers.add(recommendedReviewer);				
+			recommendedReviewer.setAVLogScore(availableLikelihood);
+			recommendedReviewer.setLCPScore(availableLikelihood * recommendedReviewer.getLCPScore());
+			recommendedReviewer.setLCSuffScore(availableLikelihood * recommendedReviewer.getLCSuffScore());
+			recommendedReviewer.setLCSubstrScore(availableLikelihood * recommendedReviewer.getLCSubstrScore());
+			recommendedReviewer.setLCSubseqScore(availableLikelihood * recommendedReviewer.getLCSubseqScore());
+			if(removeUnderThreshold ) {
+				if (availableLikelihood > threshold) {
+					availableReviewers.add(recommendedReviewer);				
+				}
+			}
+			else {
+				lCPScores.put(recommendedReviewer, recommendedReviewer.getLCPScore());
+				lCSuffScores.put(recommendedReviewer, recommendedReviewer.getLCSuffScore());
+				lCSubstrScores.put(recommendedReviewer, recommendedReviewer.getLCSubstrScore());
+				lCSubseqScores.put(recommendedReviewer, recommendedReviewer.getLCSubseqScore());
 			}
 		}
+		if (!removeUnderThreshold) {
+			allScores.add(lCPScores);
+			allScores.add(lCSuffScores);
+			allScores.add(lCSubstrScores);
+			allScores.add(lCSubseqScores);
+			availableReviewers = getRankedReviewerList(bordaBasedCombination(allScores));
+		}
+		 
+		
 		return availableReviewers;
 	}
 
 	private List<GerritUser> calcWLRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeOverThreshold) {
 		List<GerritUser> availableReviewers = new ArrayList<>();
 		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
-
+		Map<GerritUser,Double> lCPScores = new HashMap<>();
+		Map<GerritUser,Double> lCSuffScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubstrScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubseqScores = new HashMap<>();
+		List<Map<GerritUser,Double>> allScores = new ArrayList<>();
+		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());
-			if(removeOverThreshold && workload <= threshold) {
-				availableReviewers.add(recommendedReviewer);				
+			recommendedReviewer.setWLScore(workload);
+			if (workload != 0.0) {
+				recommendedReviewer.setLCPScore(recommendedReviewer.getLCPScore()/workload);
+				recommendedReviewer.setLCSuffScore(recommendedReviewer.getLCSuffScore()/workload);
+				recommendedReviewer.setLCSubstrScore(recommendedReviewer.getLCSubstrScore()/workload);
+				recommendedReviewer.setLCSubseqScore(recommendedReviewer.getLCSubseqScore()/workload);
+			}
+			if(removeOverThreshold) {
+				if(workload <= threshold) {	
+					availableReviewers.add(recommendedReviewer);				
+				}
+			}	else {
+				lCPScores.put(recommendedReviewer, recommendedReviewer.getLCPScore());
+				lCSuffScores.put(recommendedReviewer, recommendedReviewer.getLCSuffScore());
+				lCSubstrScores.put(recommendedReviewer, recommendedReviewer.getLCSubstrScore());
+				lCSubseqScores.put(recommendedReviewer, recommendedReviewer.getLCSubseqScore());
 			}
 		}
+		if (!removeOverThreshold) {
+			allScores.add(lCPScores);
+			allScores.add(lCSuffScores);
+			allScores.add(lCSubstrScores);
+			allScores.add(lCSubseqScores);
+			availableReviewers = getRankedReviewerList(bordaBasedCombination(allScores));
+		}
+		
 		return availableReviewers;
 	}
 
+	private Map<GerritUser, Integer> bordaBasedCombination(List<Map<GerritUser,Double>> allScores){
+		Map<GerritUser, Integer> ranks = new HashMap<>();
+		int M;
+		int techniqueRank=0;	
+		
+		
+		for (Map<GerritUser,Double> techniqueScores: allScores) {
+			M = 0;
+			
+			for(Double score: techniqueScores.values()) {
+				if (score != 0.0) {
+					M += 1;
+				}
+			}
+			
+		
+		    for (GerritUser reviewer: techniqueScores.keySet()) {
+				techniqueRank = ranks.getOrDefault(reviewer, 0);
+				techniqueRank += -1 * rank(reviewer,techniqueScores) + M;
+				ranks.put(reviewer, techniqueRank);
+			}
+		}
+
+		return ranks;
+	}
+	
+	private int rank(GerritUser reviewer, Map<GerritUser, Double> techniqueScores) {
+		double ranks = 0.0;
+		int temp = 0;
+		Object[] totalRanks = null;
+		
+		
+		ranks = techniqueScores.get(reviewer);
+		totalRanks = techniqueScores.values().toArray();
+		Arrays.sort(totalRanks);
+		for (int j=0; j<totalRanks.length;j++) {
+			if(totalRanks[j].equals(ranks)) {
+				temp = totalRanks.length - j;
+			}
+		}	
+		return temp;
+	}
+	
+	private List<GerritUser> getRankedReviewerList(Map<GerritUser, Integer> combinedReviewersRecommendationRank) {
+		List<GerritUser> rankedReviewersByScore = combinedReviewersRecommendationRank.entrySet().stream()
+				.sorted(Map.Entry.comparingByValue())
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toList());
+		Collections.reverse(rankedReviewersByScore); // ensure high score is ranked first
+		return rankedReviewersByScore;
+	}
+	
 	public void generateRecommendations(String appendix, double threshold, boolean removeUnderThreshold){
 		System.out.println("[" + project.name + "] Generating: " + appendix);
 		HashMap<String, Object> config = new HashMap<>();

@@ -27,38 +27,46 @@ public class ResultFinderApplication {
 			// openstack ... with log AV (0.3)  = 42.49098918702443
 			// openstack ... with log AV (0.4)  = 18.702442931517822
 	
+			//print(dtf.format(LocalDateTime.now()));
+			//resultFinder.generateRecommendations("AV_binary", 0, false);
+	
 			print(dtf.format(LocalDateTime.now()));
-			resultFinder.generateRecommendations("AV_binary", 0, true);
-	
-	//		print(dtf.format(LocalDateTime.now()));
-	//		resultFinder.generateRecommendations("AV_log_false", 0.0, false);
-	
+			resultFinder.generateRecommendations("AV_log_false", 0.0, true);
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_10_true", 0.1, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_20_true", 0.2, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_40_true", 0.4, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_60_true", 0.6, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_80_true", 0.8, true);
-	
-	//		print(dtf.format(LocalDateTime.now()));
+			
+			print(dtf.format(LocalDateTime.now()));
 	//		resultFinder.generateRecommendations("WL_false", 0.0, false);
-	
+			resultFinder = new ResultFinder(project);
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_80_true", 0.8, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_90_true", 0.9, true);
-	
+			
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_95_true", 0.95, true);
+		
+			resultFinder = new ResultFinder(project);
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendations("AV_log_80_false", 0.8, false);
+			
+			resultFinder = new ResultFinder(project);
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendations("WL_95_false", 0.95, false);
 		}
 	}
 
