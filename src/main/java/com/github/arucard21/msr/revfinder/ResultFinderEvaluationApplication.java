@@ -13,7 +13,7 @@ import com.github.arucard21.msr.Project;
 
 public class ResultFinderEvaluationApplication {
 	public static void main(String[] args) {
-		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI);
+		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI, Project.OPENSTACK);
 		for (Project project : projects) {
 			Path resourcesPath = Paths.get("src/main/data/resultfinder/");
 			String fileName = String.format("%s_recommendations_.*.json", project.name);
@@ -131,6 +131,51 @@ Evaluation for recommendations from mediawiki_recommendations_AV_log_40_true.jso
 [mediawiki based-on-created] MRR = 0.194857
 
 
+
+Evaluation for recommendations from openstack_recommendations_WL_80_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack based-on-created] MRR = 0.299112
+
+Evaluation for recommendations from openstack_recommendations_AV_log_80_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=0.0, 3=0.0, 5=0.0, 10=0.0}
+[openstack based-on-created] MRR = 0.000000
+
+Evaluation for recommendations from openstack_recommendations_AV_log_10_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=36.037441497659906, 3=64.0210608424337, 5=74.16146645865835, 10=83.65834633385336}
+[openstack based-on-created] MRR = 0.283692
+
+Evaluation for recommendations from openstack_recommendations_AV_log_60_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=0.0, 3=0.0, 5=0.0, 10=0.0}
+[openstack based-on-created] MRR = 0.000000
+
+Evaluation for recommendations from openstack_recommendations_AV_log_40_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=18.91575663026521, 3=26.618564742589705, 5=27.827613104524183, 10=28.237129485179405}
+[openstack based-on-created] MRR = 0.315243
+
+Evaluation for recommendations from openstack_recommendations_WL_90_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack based-on-created] MRR = 0.299112
+
+Evaluation for recommendations from openstack_recommendations_AV_log_20_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=34.08736349453978, 3=58.95085803432137, 5=67.37519500780031, 10=73.5179407176287}
+[openstack based-on-created] MRR = 0.262093
+
+Evaluation for recommendations from openstack_recommendations_AV_binary.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.881435257410295, 3=64.48907956318253, 5=75.25351014040561, 10=85.64742589703589}
+[openstack based-on-created] MRR = 0.290646
+
+Evaluation for recommendations from openstack_recommendations_WL_95_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack based-on-created] MRR = 0.299112
 		
 		 */
 	}

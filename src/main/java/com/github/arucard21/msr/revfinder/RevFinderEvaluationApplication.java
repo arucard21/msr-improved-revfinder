@@ -7,7 +7,7 @@ import com.github.arucard21.msr.Project;
 
 public class RevFinderEvaluationApplication {
 	public static void main(String[] args) {
-		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI);
+		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI, Project.OPENSTACK);
 		for (Project project : projects) {
 //		Project project = Project.MEDIAWIKI;
 			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
@@ -39,6 +39,13 @@ public class RevFinderEvaluationApplication {
 {1=37.33700642791552, 3=65.58310376492194, 5=78.49403122130394, 10=91.643709825528}
 [mediawiki based-on-created] MRR = 0.299320
 [mediawiki within-period] MRR = 0.298570
+
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack within-period] top-k accuracies for each k = 
+{1=35.88612670408982, 3=64.77546110665597, 5=76.6439454691259, 10=87.65036086607859}
+[openstack based-on-created] MRR = 0.299112
+[openstack within-period] MRR = 0.298865
 		
 		 */
 	}

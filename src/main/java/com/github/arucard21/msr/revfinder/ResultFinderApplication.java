@@ -11,7 +11,7 @@ public class ResultFinderApplication {
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
 	public static void main(String[] args) throws Exception {
-		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI);
+		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI, Project.OPENSTACK);
 		for (Project project : projects) {
 			ResultFinder resultFinder = new ResultFinder(project);
 			//print(project.name + " top-k (10) accuracy = " + resultFinder.calculateTopKAccuracy(10, false, false));
