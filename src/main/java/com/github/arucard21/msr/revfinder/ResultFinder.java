@@ -33,92 +33,77 @@ public class ResultFinder {
 		revFinderEvaluation = new RevFinderEvaluation(project);
 	}
 
-	private List<GerritUser> calcBinaryAVRecommendation(ReviewableChange change) {
-		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
-		Map<GerritUser, Double> ranking = new HashMap<>();
-		String dateString = change.getCreated().toString().substring(0, 10);
-
-		for(GerritUser candidate : candidates)
-		{
-			double filepathScore = candidate.getCombinedFilepathScore();
-			int availability = AvChecker.checkBinaryAvailabilityByDateString(dateString, candidate.getId());
-
-			if(availability == 0)
-				continue;
-
-			candidate.setAVBinaryScore(filepathScore * availability);
-			ranking.put(candidate, candidate.getAVBinaryScore());
-		}
-
-		return getRankedReviewerListDescending(ranking);
-	}
-
-	private List<GerritUser> calcLogAVRecommendation(ReviewableChange change, double threshold, boolean removeUnderThreshold) {
-		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
-		Map<GerritUser, Double> ranking = new HashMap<>();
-		String dateString = change.getCreated().toString().substring(0, 10);
-
-		for(GerritUser candidate : candidates)
-		{
-			double filepathScore = candidate.getCombinedFilepathScore();
-			double availability = AvChecker.checkLogAvailabilityByDateString(dateString, candidate.getId());
-
-			if(availability == 0)
-				continue;
-
-			if(removeUnderThreshold && threshold > availability)
-				continue;
-
-			candidate.setAVLogScore(filepathScore * availability);
-			ranking.put(candidate, candidate.getAVLogScore());
-		}
-
-		return getRankedReviewerListDescending(ranking);
-	}
-
-	private List<GerritUser> calcWLRecommendation(ReviewableChange change, double maximum, boolean removeOverMaximum) {
-		List<GerritUser> candidates = revFinderEvaluation.candidates(change, false, project);
-		Map<GerritUser, Double> ranking = new HashMap<>();
-		String dateString = change.getCreated().toString().substring(0, 10);
-
-		for(GerritUser candidate : candidates)
-		{
-			double filepathScore = candidate.getCombinedFilepathScore();
-			double workload = WlChecker.getReviewerWorkloadByDay(dateString, candidate.getId());
-
-			if(workload == 0)
-				continue;
-
-			if(removeOverMaximum && workload > maximum)
-				continue;
-
-			candidate.setWLScore(filepathScore * workload);
-			ranking.put(candidate, candidate.getWLScore());
-		}
-
-		// TODO sort ascending!
-		return getRankedReviewerListDescending(ranking);
-	}
-
-	public static List<GerritUser> getRankedReviewerListDescending(Map<GerritUser, Double> candidates) {
-		List<GerritUser> tempList = candidates.entrySet().stream()
-				.sorted(Map.Entry.comparingByValue())
-				.map(Map.Entry::getKey)
+	private List<GerritUser> calcBinaryAVRecommendation(ReviewRecommendations reviewRecommendations) {
+		List<GerritUser> availableReviewers = new ArrayList<>();
+		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
+				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
 				.collect(Collectors.toList());
-		Collections.reverse(tempList);
-		if (tempList.size() > 9) {
-			return tempList.subList(0, 9);
+		if(changes.size() == 0) {
+			System.err.println("Multiple changes with same ID found");
 		}
-		else {
-			return tempList.subList(0, tempList.size());
+		ReviewableChange change = changes.get(0);
+		String dateString = change.getCreated().toString().substring(0, 10);
+
+		
+		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
+		{
+			boolean available = AvChecker.checkBinaryAvailabilityByDateString(dateString, recommendedReviewer.getId());
+			if(available) {
+				availableReviewers.add(recommendedReviewer);				
+			}
 		}
+		return availableReviewers;
+	}
+
+	private List<GerritUser> calcLogAVRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeUnderThreshold) {
+		List<GerritUser> availableReviewers = new ArrayList<>();
+		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
+				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
+				.collect(Collectors.toList());
+		if(changes.size() == 0) {
+			System.err.println("Multiple changes with same ID found");
+		}
+		ReviewableChange change = changes.get(0);
+		String dateString = change.getCreated().toString().substring(0, 10);
+
+		
+		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
+		{
+			float availableLikelihood = AvChecker.checkLogAvailabilityByDateString(dateString, recommendedReviewer.getId());
+			if(removeUnderThreshold && availableLikelihood > threshold) {
+				availableReviewers.add(recommendedReviewer);				
+			}
+		}
+		return availableReviewers;
+	}
+
+	private List<GerritUser> calcWLRecommendation(ReviewRecommendations reviewRecommendations, double threshold, boolean removeOverThreshold) {
+		List<GerritUser> availableReviewers = new ArrayList<>();
+		List<ReviewableChange> changes = revFinderEvaluation.getChanges(false).parallelStream()
+				.filter(change -> change.getId().equals(reviewRecommendations.getReviewID()))
+				.collect(Collectors.toList());
+		if(changes.size() == 0) {
+			System.err.println("Multiple changes with same ID found");
+		}
+		ReviewableChange change = changes.get(0);
+		String dateString = change.getCreated().toString().substring(0, 10);
+
+		
+		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
+		{
+			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());
+			if(removeOverThreshold && workload <= threshold) {
+				availableReviewers.add(recommendedReviewer);				
+			}
+		}
+		return availableReviewers;
 	}
 
 	public void generateRecommendations(String appendix, double threshold, boolean removeUnderThreshold){
 		System.out.println("[" + project.name + "] Generating: " + appendix);
 		HashMap<String, Object> config = new HashMap<>();
 		config.put(JsonGenerator.PRETTY_PRINTING, true);
-		File outputFile = getResourceFile(String.format(getRecommendationsFilename(appendix), project.name));
+		File outputFile = getResourceFile(String.format(getImprovedRecommendationsFilename(appendix), project.name));
 
 		if (outputFile.exists()) {
 			System.out.println("--> " + appendix + " already generated");
@@ -129,28 +114,28 @@ public class ResultFinder {
 			JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
 			generator.writeStartArray();
 
-			for (ReviewableChange change : revFinderEvaluation.getChanges(false)) {
+			for (ReviewRecommendations reviewRecommendations : revFinderEvaluation.getRecommendations(false)) {
 				generator.writeStartObject();
-				generator.write("review_id", change.getId());
+				generator.write("review_id", reviewRecommendations.getReviewID());
 				generator.writeStartArray("recommended_reviewers");
 
 				if(appendix.equals("AV_binary"))
 				{
-					calcBinaryAVRecommendation(change)
+					calcBinaryAVRecommendation(reviewRecommendations)
 							.stream()
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);
 				}
 				else if(appendix.contains("AV_log"))
 				{
-					calcLogAVRecommendation(change, threshold, removeUnderThreshold)
+					calcLogAVRecommendation(reviewRecommendations, threshold, removeUnderThreshold)
 							.stream()
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);
 				}
 				else if(appendix.contains("WL_"))
 				{
-					calcWLRecommendation(change, threshold, removeUnderThreshold)
+					calcWLRecommendation(reviewRecommendations, threshold, removeUnderThreshold)
 							.stream()
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);
@@ -162,17 +147,17 @@ public class ResultFinder {
 			generator.writeEnd();
 			generator.flush();
 			generator.close();
-			System.out.println(String.format("Generated recommended reviewers for %s", project.name));
+			System.out.println(String.format("Generated improved reviewer recommendations for %s", project.name));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private static File getResourceFile(String filename) {
+	private File getResourceFile(String filename) {
 		return new File("src/main/data/", filename);
 	}
 
-	private String getRecommendationsFilename(String appendix) {
+	private String getImprovedRecommendationsFilename(String appendix) {
 		return "resultfinder/%s_recommendations_" + appendix + ".json";
 	}
 }

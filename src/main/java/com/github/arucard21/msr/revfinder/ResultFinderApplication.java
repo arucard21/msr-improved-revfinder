@@ -1,9 +1,6 @@
 package com.github.arucard21.msr.revfinder;
 
 import com.github.arucard21.msr.Project;
-import org.json.simple.parser.ParseException;
-
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 

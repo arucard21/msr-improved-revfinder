@@ -98,7 +98,7 @@ public class AvailabilityChecker {
         return false;
     }
 
-    public int checkBinaryAvailabilityByDateString(String todayString, int reviewer) {
+    public boolean checkBinaryAvailabilityByDateString(String todayString, int reviewer) {
         Date today = getDateFromString(todayString + " 00:00:00");
         Calendar cal = Calendar.getInstance();
         cal.setTime(today);
@@ -109,15 +109,12 @@ public class AvailabilityChecker {
             Date date = cal.getTime();
             String dateString = getDateStringFromDate(date);
 
-            if(! reviewersByDay.containsKey(dateString))
-                continue;
-
-            //System.out.println(reviewer + " ? " + date.toString() + " : " + reviewersByDay.get(getDateStringFromDate(date)));
-            if(reviewersByDay.get(dateString).contains(reviewer))
-                return 1;
+            Set<Integer> availableReviewers = reviewersByDay.get(dateString);
+            if(availableReviewers != null && availableReviewers.contains(reviewer)) {
+            	return true;
+            }
         }
-
-        return 0;
+        return false;
     }
 
     public float checkLogAvailability(Date today, int reviewer) {

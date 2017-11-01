@@ -128,10 +128,6 @@ public class GerritUser {
 		AVBinaryScore = avBinaryScore;
 	}
 
-
-	// TODO COMbINE
-	public double getCombinedFilepathScore() { return 1.0; }
-
 	public void setAVLogScore(double AVLogScore) {
 		this.AVLogScore = AVLogScore;
 	}
