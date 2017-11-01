@@ -3,7 +3,6 @@ package com.github.arucard21.msr.revfinder;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.json.Json;

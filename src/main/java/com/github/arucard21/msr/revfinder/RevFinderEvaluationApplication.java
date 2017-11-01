@@ -7,8 +7,9 @@ import com.github.arucard21.msr.Project;
 
 public class RevFinderEvaluationApplication {
 	public static void main(String[] args) {
-//		for (Project project : Project.values()) {
-		Project project = Project.MEDIAWIKI;
+		List<Project> projects = Arrays.asList(Project.ECLIPSE, Project.MEDIAWIKI);
+		for (Project project : projects) {
+//		Project project = Project.MEDIAWIKI;
 			// you can skip projects by making sure the project_recommendations.json file already exists in the revfinder folder
 			RevFinderEvaluation revFinderEvaluation = new RevFinderEvaluation(project);
 			List<Integer> valuesForK = Arrays.asList(1,3,5,10);
@@ -21,9 +22,16 @@ public class RevFinderEvaluationApplication {
 				System.out.printf("[%s within-period] top-k accuracies for each k = \n%s\n", project.name, revFinderEvaluation.calculateTopKAccuracy(valuesForK, true));
 				System.out.printf("[%s within-period] MRR = %f\n", project.name, revFinderEvaluation.calculateMRR(true));
 			}).start();
-//		}
+		}
 
 		/*
+
+[eclipse within-period] top-k accuracies for each k = 
+{1=15.960912052117264, 3=24.9728555917481, 5=47.50271444082519, 10=54.28881650380022}
+[eclipse within-period] MRR = 0.177906
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.581374524289233, 3=33.82583389299306, 5=50.682784866800986, 10=67.38303111708082}
+[eclipse based-on-created] MRR = 0.324338
 
 [mediawiki based-on-created] top-k accuracies for each k = 
 {1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
