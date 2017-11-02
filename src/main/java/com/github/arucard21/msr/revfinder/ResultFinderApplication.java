@@ -72,7 +72,19 @@ public class ResultFinderApplication {
 			resultFinder.generateRecommendationsCombined("AVWL_binary_avRemoval_80_wlRemoval", true, 0.0, true, 0.8, true);
 			
 			print(dtf.format(LocalDateTime.now()));
-			resultFinder.generateRecommendationsCombined("AVWL_log10_avReranking_80_wlReranking", false, 0.1, false, 0.8, false);
+			resultFinder.generateRecommendationsCombined("AVWL_log20_avRemoval_80_wlRemoval", false, 0.2, true, 0.8, true);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_avReranking_80_wlRemoval", false, 0.0, false, 0.8, true);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_binary_avRemoval_wlReranking", true, 0.0, true, 0.0, false);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_log20_avRemoval_wlReranking", false, 0.2, true, 0.0, false);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_avReranking_wlReranking", false, 0.0, false, 0.0, false);
 		}
 	}
 

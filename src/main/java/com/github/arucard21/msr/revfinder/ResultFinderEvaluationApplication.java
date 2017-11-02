@@ -38,10 +38,40 @@ public class ResultFinderEvaluationApplication {
 
 		/*
 	
+Evaluation for recommendations from eclipse_recommendations_AVWL_log20_avRemoval_80_wlRemoval.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.581374524289233, 3=33.82583389299306, 5=50.682784866800986, 10=67.38303111708082}
+[eclipse based-on-created] MRR = 0.324338
+
+Evaluation for recommendations from eclipse_recommendations_AVWL_avReranking_wlReranking.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=13.610924557868815, 3=47.79494067606895, 5=51.42153570629058, 10=52.20505932393105}
+[eclipse based-on-created] MRR = 0.283899
+
+Evaluation for recommendations from eclipse_recommendations_AVWL_log20_avRemoval_wlReranking.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=13.476606223416162, 3=48.48891873740766, 5=53.010969330646965, 10=57.93597492724424}
+[eclipse based-on-created] MRR = 0.295714
+
+Evaluation for recommendations from eclipse_recommendations_AVWL_binary_avRemoval_80_wlRemoval.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.581374524289233, 3=33.82583389299306, 5=50.682784866800986, 10=67.38303111708082}
+[eclipse based-on-created] MRR = 0.324338
+
+Evaluation for recommendations from eclipse_recommendations_AVWL_binary_avRemoval_wlReranking.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=13.476606223416162, 3=48.48891873740766, 5=53.010969330646965, 10=57.93597492724424}
+[eclipse based-on-created] MRR = 0.295714
+
 Evaluation for recommendations from eclipse_recommendations_AV_log_60_true.json
 [eclipse based-on-created] top-k accuracies for each k = 
 {1=0.0, 3=0.0, 5=0.0, 10=0.0}
 [eclipse based-on-created] MRR = 0.000000
+
+Evaluation for recommendations from eclipse_recommendations_AVWL_avReranking_80_wlRemoval.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.961943138571748, 3=47.63823595254085, 5=49.42914707857623, 10=52.16028654578017}
+[eclipse based-on-created] MRR = 0.343805
 
 Evaluation for recommendations from eclipse_recommendations_AV_log_false.json
 [eclipse based-on-created] top-k accuracies for each k = 
@@ -120,15 +150,35 @@ Evaluation for recommendations from mediawiki_recommendations_AV_log_60_true.jso
 {1=0.0, 3=0.0, 5=0.0, 10=0.0}
 [mediawiki based-on-created] MRR = 0.000000
 
+Evaluation for recommendations from mediawiki_recommendations_AVWL_binary_avRemoval_wlReranking.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=33.82826475849732, 3=60.16100178890876, 5=72.34347048300536, 10=88.44364937388193}
+[mediawiki based-on-created] MRR = 0.283663
+
 Evaluation for recommendations from mediawiki_recommendations_AV_binary.json
 [mediawiki based-on-created] top-k accuracies for each k = 
 {1=36.028622540250446, 3=61.14490161001789, 5=69.2128801431127, 10=73.7567084078712}
 [mediawiki based-on-created] MRR = 0.272421
 
+Evaluation for recommendations from mediawiki_recommendations_AVWL_log20_avRemoval_80_wlRemoval.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
+[mediawiki based-on-created] MRR = 0.299320
+
+Evaluation for recommendations from mediawiki_recommendations_AVWL_avReranking_wlReranking.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=32.55813953488372, 3=56.81574239713775, 5=64.8479427549195, 10=74.23971377459749}
+[mediawiki based-on-created] MRR = 0.251078
+
 Evaluation for recommendations from mediawiki_recommendations_AV_log_10_true.json
 [mediawiki based-on-created] top-k accuracies for each k = 
 {1=32.84436493738819, 3=53.917710196779964, 5=59.159212880143116, 10=62.1824686940966}
 [mediawiki based-on-created] MRR = 0.286995
+
+Evaluation for recommendations from mediawiki_recommendations_AVWL_binary_avRemoval_80_wlRemoval.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
+[mediawiki based-on-created] MRR = 0.299320
 
 Evaluation for recommendations from mediawiki_recommendations_AV_log_80_false.json
 [mediawiki based-on-created] top-k accuracies for each k = 
@@ -155,12 +205,42 @@ Evaluation for recommendations from mediawiki_recommendations_WL_95_true.json
 {1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
 [mediawiki based-on-created] MRR = 0.299320
 
+Evaluation for recommendations from mediawiki_recommendations_AVWL_log20_avRemoval_wlReranking.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=33.82826475849732, 3=60.16100178890876, 5=72.34347048300536, 10=88.44364937388193}
+[mediawiki based-on-created] MRR = 0.283663
+
+Evaluation for recommendations from mediawiki_recommendations_AVWL_avReranking_80_wlRemoval.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=32.665474060822895, 3=58.44364937388193, 5=66.6010733452594, 10=74.88372093023256}
+[mediawiki based-on-created] MRR = 0.265070
+
 Evaluation for recommendations from mediawiki_recommendations_AV_log_40_true.json
 [mediawiki based-on-created] top-k accuracies for each k = 
 {1=7.388193202146691, 3=9.105545617173524, 5=9.66010733452594, 10=9.767441860465116}
 [mediawiki based-on-created] MRR = 0.194857
 
 
+
+Evaluation for recommendations from openstack_recommendations_AVWL_avReranking_80_wlRemoval.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.43291731669267, 3=63.88455538221529, 5=75.48751950078002, 10=85.23790951638065}
+[openstack based-on-created] MRR = 0.289093
+
+Evaluation for recommendations from openstack_recommendations_AVWL_avReranking_wlReranking.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=22.406396255850233, 3=46.43135725429017, 5=59.945397815912635, 10=78.56864274570982}
+[openstack based-on-created] MRR = 0.276160
+
+Evaluation for recommendations from openstack_recommendations_AVWL_log20_avRemoval_wlReranking.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=19.091263650546022, 3=42.667706708268334, 5=55.674726989079566, 10=76.18954758190327}
+[openstack based-on-created] MRR = 0.276371
+
+Evaluation for recommendations from openstack_recommendations_AVWL_binary_avRemoval_wlReranking.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=19.091263650546022, 3=42.667706708268334, 5=55.674726989079566, 10=76.18954758190327}
+[openstack based-on-created] MRR = 0.276371
 
 Evaluation for recommendations from openstack_recommendations_WL_95_false.json
 [openstack based-on-created] top-k accuracies for each k = 
@@ -218,6 +298,16 @@ Evaluation for recommendations from openstack_recommendations_AV_binary.json
 [openstack based-on-created] MRR = 0.290646
 
 Evaluation for recommendations from openstack_recommendations_WL_95_true.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack based-on-created] MRR = 0.299112
+
+Evaluation for recommendations from openstack_recommendations_AVWL_log20_avRemoval_80_wlRemoval.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
+[openstack based-on-created] MRR = 0.299112
+
+Evaluation for recommendations from openstack_recommendations_AVWL_binary_avRemoval_80_wlRemoval.json
 [openstack based-on-created] top-k accuracies for each k = 
 {1=35.9984399375975, 3=65.07410296411857, 5=76.77457098283931, 10=87.69500780031201}
 [openstack based-on-created] MRR = 0.299112

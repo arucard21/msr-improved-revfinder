@@ -158,20 +158,27 @@ public class ResultFinder {
 			availableReviewer.setAVBinaryScore(available ? 1.0 : 0.0);
 			float availableLikelihood = AvChecker.checkLogAvailabilityByDateString(dateString, recommendedReviewer.getId());
 			availableReviewer.setAVLogScore(availableLikelihood);
-			availableReviewer.setLCPScore(availableLikelihood * recommendedReviewer.getLCPScore());
-			availableReviewer.setLCSuffScore(availableLikelihood * recommendedReviewer.getLCSuffScore());
-			availableReviewer.setLCSubstrScore(availableLikelihood * recommendedReviewer.getLCSubstrScore());
-			availableReviewer.setLCSubseqScore(availableLikelihood * recommendedReviewer.getLCSubseqScore());
-			
+			availableReviewer.setLCPScore(recommendedReviewer.getLCPScore());
+			availableReviewer.setLCSuffScore(recommendedReviewer.getLCSuffScore());
+			availableReviewer.setLCSubstrScore(recommendedReviewer.getLCSubstrScore());
+			availableReviewer.setLCSubseqScore(recommendedReviewer.getLCSubseqScore());
+
+			if(!avRemove) {
+				// adjust scores for ranking based on availability
+				availableReviewer.setLCPScore(availableLikelihood * availableReviewer.getLCPScore());
+				availableReviewer.setLCSuffScore(availableLikelihood * availableReviewer.getLCSuffScore());
+				availableReviewer.setLCSubstrScore(availableLikelihood * availableReviewer.getLCSubstrScore());
+				availableReviewer.setLCSubseqScore(availableLikelihood * availableReviewer.getLCSubseqScore());
+			}
 			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());
 			availableReviewer.setWLScore(workload);
-			if (workload != 0.0) {
+			if (!wlRemove && workload != 0.0) {
+				// adjust scores for ranking based on workload
 				availableReviewer.setLCPScore(availableReviewer.getLCPScore()/workload);
 				availableReviewer.setLCSuffScore(availableReviewer.getLCSuffScore()/workload);
 				availableReviewer.setLCSubstrScore(availableReviewer.getLCSubstrScore()/workload);
 				availableReviewer.setLCSubseqScore(availableReviewer.getLCSubseqScore()/workload);
 			}
-			
 
 			if(avRemove) {
 				if(avBinary) {
