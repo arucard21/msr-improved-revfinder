@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.github.arucard21.msr.Project;
@@ -23,14 +26,42 @@ public class ResultFinderEvaluationApplication {
 						.filter(path -> path.toFile().getName().matches(fileName))
 						.map(Path::toFile)
 						.collect(Collectors.toList());
+				List<String> combinedMethodsEvaluation = new ArrayList<>();
 				for (File file : files) {
 					System.out.printf("Evaluation for recommendations from %s\n", file.getName());
 					RevFinderEvaluation revFinderEvaluation = new RevFinderEvaluation(project, file);
 					List<Integer> valuesForK = Arrays.asList(1,3,5,10);
-					System.out.printf("[%s based-on-created] top-k accuracies for each k = \n%s\n", project.name, revFinderEvaluation.calculateTopKAccuracy(valuesForK, false));
+					Map<Integer, Double> topK = revFinderEvaluation.calculateTopKAccuracy(valuesForK, false);
+					double mrr = revFinderEvaluation.calculateMRR(false);
+					if(file.getName().contains("AVWL_binary_avRemoval_80_wlRemoval")) {
+						combinedMethodsEvaluation.add(String.format("avBinaryRemove_wl80Remove;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+					else if(file.getName().contains("AVWL_log20_avRemoval_80_wlRemoval")) {
+						combinedMethodsEvaluation.add(String.format("avLog20Remove_wl80Remove;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+					else if(file.getName().contains("AVWL_avReranking_80_wlRemoval")) {
+						combinedMethodsEvaluation.add(String.format("avReranking_wl80Remove;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+					else if(file.getName().contains("AVWL_binary_avRemoval_wlReranking")) {
+						combinedMethodsEvaluation.add(String.format("avBinaryRemove_wlReranking;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+					else if(file.getName().contains("AVWL_log20_avRemoval_wlReranking")) {
+						combinedMethodsEvaluation.add(String.format("avLog20Remove_wlReranking;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+					else if(file.getName().contains("AVWL_avReranking_wlReranking")) {
+						combinedMethodsEvaluation.add(String.format("avReranking_wlReranking;%f;%f;%f;%f;%f\n", topK.get(1), topK.get(3), topK.get(5), topK.get(10), mrr));
+					}
+
+					System.out.printf("[%s based-on-created] top-k = %s\n", project.name, revFinderEvaluation.calculateTopKAccuracy(valuesForK, false));
 					System.out.printf("[%s based-on-created] MRR = %f\n", project.name, revFinderEvaluation.calculateMRR(false));
 					System.out.println("");
 				}
+				Collections.sort(combinedMethodsEvaluation);
+				System.out.printf("Exportable data for combined methods of %s:\n", project.name);
+				for(String eval: combinedMethodsEvaluation) {
+					System.out.print(eval);
+				}
+				System.out.println("");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
