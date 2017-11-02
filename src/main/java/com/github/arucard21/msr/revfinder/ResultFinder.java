@@ -131,6 +131,81 @@ public class ResultFinder {
 		
 		return availableReviewers;
 	}
+	
+	private List<GerritUser> calcAVWLRecommendations(ReviewRecommendations reviewRecommendations,  
+			boolean avBinary,
+			double avThreshold, 
+			boolean avRemove, 
+			double wlThreshold, 
+			boolean wlRemove){
+		if(avBinary) {
+			//binary availability does not allow for re-ranking,so it implies removal
+			avRemove = true;
+		}
+		List<GerritUser> availableReviewers = new ArrayList<>();
+		String dateString = reviewRecommendations.getReviewCreated().toString().substring(0, 10);
+		Map<GerritUser,Double> lCPScores = new HashMap<>();
+		Map<GerritUser,Double> lCSuffScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubstrScores = new HashMap<>();
+		Map<GerritUser,Double> lCSubseqScores = new HashMap<>();
+		List<Map<GerritUser,Double>> allScores = new ArrayList<>();
+		
+		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
+		{
+			GerritUser availableReviewer = new GerritUser(recommendedReviewer.getId(), recommendedReviewer.getName());
+			
+			boolean available = AvChecker.checkBinaryAvailabilityByDateString(dateString, recommendedReviewer.getId());
+			availableReviewer.setAVBinaryScore(available ? 1.0 : 0.0);
+			float availableLikelihood = AvChecker.checkLogAvailabilityByDateString(dateString, recommendedReviewer.getId());
+			availableReviewer.setAVLogScore(availableLikelihood);
+			availableReviewer.setLCPScore(availableLikelihood * recommendedReviewer.getLCPScore());
+			availableReviewer.setLCSuffScore(availableLikelihood * recommendedReviewer.getLCSuffScore());
+			availableReviewer.setLCSubstrScore(availableLikelihood * recommendedReviewer.getLCSubstrScore());
+			availableReviewer.setLCSubseqScore(availableLikelihood * recommendedReviewer.getLCSubseqScore());
+			
+			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());
+			availableReviewer.setWLScore(workload);
+			if (workload != 0.0) {
+				availableReviewer.setLCPScore(availableReviewer.getLCPScore()/workload);
+				availableReviewer.setLCSuffScore(availableReviewer.getLCSuffScore()/workload);
+				availableReviewer.setLCSubstrScore(availableReviewer.getLCSubstrScore()/workload);
+				availableReviewer.setLCSubseqScore(availableReviewer.getLCSubseqScore()/workload);
+			}
+			
+
+			if(avRemove) {
+				if(avBinary) {
+					if(available) {
+						availableReviewers.add(availableReviewer);
+					}
+				}
+				else {
+					if (availableLikelihood > avThreshold) {
+						availableReviewers.add(availableReviewer);				
+					}
+				}
+			}
+			if(wlRemove) {
+				if(workload <= wlThreshold) {
+					availableReviewers.add(availableReviewer);				
+				}
+			}
+			if (!avRemove || !wlRemove){
+				lCPScores.put(availableReviewer, availableReviewer.getLCPScore());
+				lCSuffScores.put(availableReviewer, availableReviewer.getLCSuffScore());
+				lCSubstrScores.put(availableReviewer, availableReviewer.getLCSubstrScore());
+				lCSubseqScores.put(availableReviewer, availableReviewer.getLCSubseqScore());
+			}
+		}
+		if (!avRemove || !wlRemove){
+			allScores.add(lCPScores);
+			allScores.add(lCSuffScores);
+			allScores.add(lCSubstrScores);
+			allScores.add(lCSubseqScores);
+			availableReviewers = getRankedReviewerList(bordaBasedCombination(allScores));
+		}
+		return availableReviewers;
+	}
 
 	private Map<GerritUser, Integer> bordaBasedCombination(List<Map<GerritUser,Double>> allScores){
 		Map<GerritUser, Integer> ranks = new HashMap<>();
@@ -212,14 +287,14 @@ public class ResultFinder {
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);
 				}
-				else if(appendix.contains("AV_log"))
+				else if(appendix.startsWith("AV_log"))
 				{
 					calcLogAVRecommendation(reviewRecommendations, threshold, removeUnderThreshold)
 							.stream()
 							.map(reviewer -> reviewer.asJsonObject())
 							.forEach(generator::write);
 				}
-				else if(appendix.contains("WL_"))
+				else if(appendix.startsWith("WL_"))
 				{
 					calcWLRecommendation(reviewRecommendations, threshold, removeUnderThreshold)
 							.stream()
@@ -227,6 +302,47 @@ public class ResultFinder {
 							.forEach(generator::write);
 				}
 
+				generator.writeEnd();
+				generator.writeEnd();
+			}
+			generator.writeEnd();
+			generator.flush();
+			generator.close();
+			System.out.println(String.format("Generated improved reviewer recommendations for %s", project.name));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void generateRecommendationsCombined(String appendix, boolean avBinary, double avThreshold, boolean avRemove, double wlThreshold, boolean wlRemove){
+		System.out.println("[" + project.name + "] Generating: " + appendix);
+		HashMap<String, Object> config = new HashMap<>();
+		config.put(JsonGenerator.PRETTY_PRINTING, true);
+		File outputFile = getResourceFile(String.format(getImprovedRecommendationsFilename(appendix), project.name));
+	
+		if (outputFile.exists()) {
+			System.out.println("--> " + appendix + " already generated");
+			return;
+		}
+		try {
+			outputFile.createNewFile();
+			JsonGenerator generator = Json.createGeneratorFactory(config).createGenerator(new FileWriter(outputFile));
+			generator.writeStartArray();
+	
+			for (ReviewRecommendations reviewRecommendations : revFinderEvaluation.getRecommendations(false)) {
+				generator.writeStartObject();
+				generator.write("review_id", reviewRecommendations.getReviewID());
+				generator.write("created", reviewRecommendations.getReviewCreated().toString());
+				generator.writeStartArray("recommended_reviewers");
+	
+				if(appendix.startsWith("AVWL_"))
+				{
+					calcAVWLRecommendations(reviewRecommendations, avBinary, avThreshold, avRemove, wlThreshold, wlRemove)
+							.stream()
+							.map(reviewer -> reviewer.asJsonObject())
+							.forEach(generator::write);
+				}
+	
 				generator.writeEnd();
 				generator.writeEnd();
 			}

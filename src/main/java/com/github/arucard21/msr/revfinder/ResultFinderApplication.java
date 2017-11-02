@@ -67,6 +67,12 @@ public class ResultFinderApplication {
 //			resultFinder = new ResultFinder(project);
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_95_false", 0.95, false);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_binary_avRemoval_80_wlRemoval", true, 0.0, true, 0.8, true);
+			
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendationsCombined("AVWL_log10_avReranking_80_wlReranking", false, 0.1, false, 0.8, false);
 		}
 	}
 
