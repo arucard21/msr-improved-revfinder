@@ -23,21 +23,38 @@ public class RevFinderApplication {
 		}
 
 		/*
-		Generated recommended reviewers for openstack
-		Generated recommended reviewers for openstack
-		Results for data filtered only on created date:
-		openstack top-k accuracy for first = 75.65078093712455
-		openstack top-k accuracy for last = 72.4669603524229
-		openstack MRR for first = 0.41792055228178493
-		openstack MRR for last = 0.3955286820374921
-		openstack average number of files = 15.713656387665198
-		
-		Results for more filtered data:
-		openstack top-k accuracy for first = 75.3808151502676
-		openstack top-k accuracy for last = 72.16961712638945
-		openstack MRR for first = 0.41646988766688103
-		openstack MRR for last = 0.394677164814052
-		openstack average number of files = 15.248867846850557
+
+[eclipse based-on-created] Generating recommendations
+[eclipse within-period] Generating recommendations
+Generated recommended reviewers for eclipse
+[eclipse within-period] Finished generating recommendations
+[eclipse within-period] average number of files = 14.496743
+Generated recommended reviewers for eclipse
+[eclipse based-on-created] Finished generating recommendations
+[eclipse based-on-created] average number of files = 14.221401
+Generated recommended reviewers for openstack
+
+[mediawiki based-on-created] Generating recommendations
+[mediawiki within-period] Generating recommendations
+Generated recommended reviewers for mediawiki
+[mediawiki within-period] Finished generating recommendations
+[mediawiki within-period] average number of files = 2.925436
+Generated recommended reviewers for mediawiki
+[mediawiki based-on-created] Finished generating recommendations
+[mediawiki based-on-created] average number of files = 3.259750
+
+[openstack based-on-created] Generating recommendations
+[openstack within-period] Generating recommendations
+[openstack within-period] Finished generating recommendations
+[openstack within-period] average number of files = 15.115678
+Generated recommended reviewers for openstack
+[openstack based-on-created] Finished generating recommendations
+[openstack based-on-created] average number of files = 15.565523
+
+[qt based-on-created] Generating recommendations
+[qt within-period] Generating recommendations
+
+
 		 */
 	}
 }
