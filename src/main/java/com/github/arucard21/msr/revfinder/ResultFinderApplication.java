@@ -27,8 +27,8 @@ public class ResultFinderApplication {
 			// openstack ... with log AV (0.3)  = 42.49098918702443
 			// openstack ... with log AV (0.4)  = 18.702442931517822
 	
-			//print(dtf.format(LocalDateTime.now()));
-			//resultFinder.generateRecommendations("AV_binary", 0, false);
+			print(dtf.format(LocalDateTime.now()));
+			resultFinder.generateRecommendations("AV_binary", 0, false);
 	
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_false", 0.0, true);
@@ -50,7 +50,7 @@ public class ResultFinderApplication {
 			
 			print(dtf.format(LocalDateTime.now()));
 	//		resultFinder.generateRecommendations("WL_false", 0.0, false);
-			resultFinder = new ResultFinder(project);
+//			resultFinder = new ResultFinder(project);
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_80_true", 0.8, true);
 			
@@ -60,11 +60,11 @@ public class ResultFinderApplication {
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_95_true", 0.95, true);
 		
-			resultFinder = new ResultFinder(project);
+//			resultFinder = new ResultFinder(project);
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("AV_log_80_false", 0.8, false);
 			
-			resultFinder = new ResultFinder(project);
+//			resultFinder = new ResultFinder(project);
 			print(dtf.format(LocalDateTime.now()));
 			resultFinder.generateRecommendations("WL_95_false", 0.95, false);
 		}

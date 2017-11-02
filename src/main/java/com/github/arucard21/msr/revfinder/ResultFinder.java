@@ -39,9 +39,10 @@ public class ResultFinder {
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			boolean available = AvChecker.checkBinaryAvailabilityByDateString(dateString, recommendedReviewer.getId());
-			recommendedReviewer.setAVBinaryScore(available ? 1.0 : 0.0);
 			if(available) {
-				availableReviewers.add(recommendedReviewer);				
+				GerritUser availableReviewer = new GerritUser(recommendedReviewer.getId(), recommendedReviewer.getName());
+				availableReviewer.setAVBinaryScore(available ? 1.0 : 0.0);
+				availableReviewers.add(availableReviewer);				
 			}
 		}
 		return availableReviewers;
@@ -55,26 +56,26 @@ public class ResultFinder {
 		Map<GerritUser,Double> lCSubstrScores = new HashMap<>();
 		Map<GerritUser,Double> lCSubseqScores = new HashMap<>();
 		List<Map<GerritUser,Double>> allScores = new ArrayList<>();
- 		
 		
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			float availableLikelihood = AvChecker.checkLogAvailabilityByDateString(dateString, recommendedReviewer.getId());
-			recommendedReviewer.setAVLogScore(availableLikelihood);
-			recommendedReviewer.setLCPScore(availableLikelihood * recommendedReviewer.getLCPScore());
-			recommendedReviewer.setLCSuffScore(availableLikelihood * recommendedReviewer.getLCSuffScore());
-			recommendedReviewer.setLCSubstrScore(availableLikelihood * recommendedReviewer.getLCSubstrScore());
-			recommendedReviewer.setLCSubseqScore(availableLikelihood * recommendedReviewer.getLCSubseqScore());
+			GerritUser availableReviewer = new GerritUser(recommendedReviewer.getId(), recommendedReviewer.getName());
+			availableReviewer.setAVLogScore(availableLikelihood);
+			availableReviewer.setLCPScore(availableLikelihood * recommendedReviewer.getLCPScore());
+			availableReviewer.setLCSuffScore(availableLikelihood * recommendedReviewer.getLCSuffScore());
+			availableReviewer.setLCSubstrScore(availableLikelihood * recommendedReviewer.getLCSubstrScore());
+			availableReviewer.setLCSubseqScore(availableLikelihood * recommendedReviewer.getLCSubseqScore());
 			if(removeUnderThreshold ) {
 				if (availableLikelihood > threshold) {
-					availableReviewers.add(recommendedReviewer);				
+					availableReviewers.add(availableReviewer);				
 				}
 			}
 			else {
-				lCPScores.put(recommendedReviewer, recommendedReviewer.getLCPScore());
-				lCSuffScores.put(recommendedReviewer, recommendedReviewer.getLCSuffScore());
-				lCSubstrScores.put(recommendedReviewer, recommendedReviewer.getLCSubstrScore());
-				lCSubseqScores.put(recommendedReviewer, recommendedReviewer.getLCSubseqScore());
+				lCPScores.put(availableReviewer, availableReviewer.getLCPScore());
+				lCSuffScores.put(availableReviewer, availableReviewer.getLCSuffScore());
+				lCSubstrScores.put(availableReviewer, availableReviewer.getLCSubstrScore());
+				lCSubseqScores.put(availableReviewer, availableReviewer.getLCSubseqScore());
 			}
 		}
 		if (!removeUnderThreshold) {
@@ -101,22 +102,23 @@ public class ResultFinder {
 		for(GerritUser recommendedReviewer: reviewRecommendations.getRecommendedReviewers())
 		{
 			double workload = WlChecker.getReviewerWorkloadByDay(dateString, recommendedReviewer.getId());
-			recommendedReviewer.setWLScore(workload);
+			GerritUser availableReviewer = new GerritUser(recommendedReviewer.getId(), recommendedReviewer.getName());
+			availableReviewer.setWLScore(workload);
 			if (workload != 0.0) {
-				recommendedReviewer.setLCPScore(recommendedReviewer.getLCPScore()/workload);
-				recommendedReviewer.setLCSuffScore(recommendedReviewer.getLCSuffScore()/workload);
-				recommendedReviewer.setLCSubstrScore(recommendedReviewer.getLCSubstrScore()/workload);
-				recommendedReviewer.setLCSubseqScore(recommendedReviewer.getLCSubseqScore()/workload);
+				availableReviewer.setLCPScore(recommendedReviewer.getLCPScore()/workload);
+				availableReviewer.setLCSuffScore(recommendedReviewer.getLCSuffScore()/workload);
+				availableReviewer.setLCSubstrScore(recommendedReviewer.getLCSubstrScore()/workload);
+				availableReviewer.setLCSubseqScore(recommendedReviewer.getLCSubseqScore()/workload);
 			}
 			if(removeOverThreshold) {
 				if(workload <= threshold) {	
-					availableReviewers.add(recommendedReviewer);				
+					availableReviewers.add(availableReviewer);				
 				}
 			}	else {
-				lCPScores.put(recommendedReviewer, recommendedReviewer.getLCPScore());
-				lCSuffScores.put(recommendedReviewer, recommendedReviewer.getLCSuffScore());
-				lCSubstrScores.put(recommendedReviewer, recommendedReviewer.getLCSubstrScore());
-				lCSubseqScores.put(recommendedReviewer, recommendedReviewer.getLCSubseqScore());
+				lCPScores.put(availableReviewer, availableReviewer.getLCPScore());
+				lCSuffScores.put(availableReviewer, availableReviewer.getLCSuffScore());
+				lCSubstrScores.put(availableReviewer, availableReviewer.getLCSubstrScore());
+				lCSubseqScores.put(availableReviewer, availableReviewer.getLCSubseqScore());
 			}
 		}
 		if (!removeOverThreshold) {

@@ -43,6 +43,21 @@ Evaluation for recommendations from eclipse_recommendations_AV_log_60_true.json
 {1=0.0, 3=0.0, 5=0.0, 10=0.0}
 [eclipse based-on-created] MRR = 0.000000
 
+Evaluation for recommendations from eclipse_recommendations_AV_log_false.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.693306469666442, 3=48.39937318110589, 5=49.6306245802552, 10=52.18267293485561}
+[eclipse based-on-created] MRR = 0.392923
+
+Evaluation for recommendations from eclipse_recommendations_AV_log_80_false.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=9.961943138571748, 3=47.63823595254085, 5=49.42914707857623, 10=52.16028654578017}
+[eclipse based-on-created] MRR = 0.343805
+
+Evaluation for recommendations from eclipse_recommendations_WL_95_false.json
+[eclipse based-on-created] top-k accuracies for each k = 
+{1=13.319901499888068, 3=48.30982762480412, 5=52.76471905081711, 10=56.59279158271771}
+[eclipse based-on-created] MRR = 0.292508
+
 Evaluation for recommendations from eclipse_recommendations_AV_log_80_true.json
 [eclipse based-on-created] top-k accuracies for each k = 
 {1=0.0, 3=0.0, 5=0.0, 10=0.0}
@@ -115,10 +130,25 @@ Evaluation for recommendations from mediawiki_recommendations_AV_log_10_true.jso
 {1=32.84436493738819, 3=53.917710196779964, 5=59.159212880143116, 10=62.1824686940966}
 [mediawiki based-on-created] MRR = 0.286995
 
+Evaluation for recommendations from mediawiki_recommendations_AV_log_80_false.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=32.665474060822895, 3=58.44364937388193, 5=66.6010733452594, 10=74.88372093023256}
+[mediawiki based-on-created] MRR = 0.265070
+
+Evaluation for recommendations from mediawiki_recommendations_WL_95_false.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=32.50447227191413, 3=57.31663685152057, 5=66.92307692307692, 10=76.47584973166369}
+[mediawiki based-on-created] MRR = 0.261068
+
 Evaluation for recommendations from mediawiki_recommendations_WL_90_true.json
 [mediawiki based-on-created] top-k accuracies for each k = 
 {1=36.79785330948122, 3=65.18783542039355, 5=77.90697674418605, 10=91.32379248658319}
 [mediawiki based-on-created] MRR = 0.299320
+
+Evaluation for recommendations from mediawiki_recommendations_AV_log_false.json
+[mediawiki based-on-created] top-k accuracies for each k = 
+{1=35.61717352415027, 3=59.76744186046512, 5=67.19141323792486, 10=71.25223613595706}
+[mediawiki based-on-created] MRR = 0.270475
 
 Evaluation for recommendations from mediawiki_recommendations_WL_95_true.json
 [mediawiki based-on-created] top-k accuracies for each k = 
@@ -131,6 +161,11 @@ Evaluation for recommendations from mediawiki_recommendations_AV_log_40_true.jso
 [mediawiki based-on-created] MRR = 0.194857
 
 
+
+Evaluation for recommendations from openstack_recommendations_WL_95_false.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=18.194227769110764, 3=40.85413416536662, 5=52.80811232449298, 10=73.03042121684868}
+[openstack based-on-created] MRR = 0.264690
 
 Evaluation for recommendations from openstack_recommendations_WL_80_true.json
 [openstack based-on-created] top-k accuracies for each k = 
@@ -152,10 +187,20 @@ Evaluation for recommendations from openstack_recommendations_AV_log_60_true.jso
 {1=0.0, 3=0.0, 5=0.0, 10=0.0}
 [openstack based-on-created] MRR = 0.000000
 
+Evaluation for recommendations from openstack_recommendations_AV_log_false.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=36.11544461778471, 3=64.52808112324493, 5=75.31201248049922, 10=85.29641185647426}
+[openstack based-on-created] MRR = 0.288693
+
 Evaluation for recommendations from openstack_recommendations_AV_log_40_true.json
 [openstack based-on-created] top-k accuracies for each k = 
 {1=18.91575663026521, 3=26.618564742589705, 5=27.827613104524183, 10=28.237129485179405}
 [openstack based-on-created] MRR = 0.315243
+
+Evaluation for recommendations from openstack_recommendations_AV_log_80_false.json
+[openstack based-on-created] top-k accuracies for each k = 
+{1=35.43291731669267, 3=63.88455538221529, 5=75.48751950078002, 10=85.23790951638065}
+[openstack based-on-created] MRR = 0.289093
 
 Evaluation for recommendations from openstack_recommendations_WL_90_true.json
 [openstack based-on-created] top-k accuracies for each k = 
