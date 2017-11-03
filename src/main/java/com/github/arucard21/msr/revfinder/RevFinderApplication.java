@@ -53,7 +53,12 @@ Generated recommended reviewers for openstack
 
 [qt based-on-created] Generating recommendations
 [qt within-period] Generating recommendations
-
+Generated recommended reviewers for qt
+[qt within-period] Finished generating recommendations
+[qt within-period] average number of files = 11.106494
+Generated recommended reviewers for qt
+[qt based-on-created] Finished generating recommendations
+[qt based-on-created] average number of files = 11.203259
 
 		 */
 	}
